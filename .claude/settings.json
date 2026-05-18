@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__claude_ai_Slack__slack_search_users",
+      "mcp__claude_ai_Atlassian__lookupJiraAccountId",
+      "mcp__claude_ai_Slack__slack_search_channels",
+      "mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql",
+      "mcp__claude_ai_Atlassian__getJiraIssue",
+      "mcp__claude_ai_Atlassian__getAccessibleAtlassianResources",
+      "Bash(python3 *)",
+      "Bash(python3 sprint_monitor_build.py)",
+      "Edit(~/.claude/skills/sprint-monitor/**)",
+      "mcp__claude_ai_Slack__slack_send_message",
+      "mcp__claude_ai_Slack__slack_create_canvas",
+      "mcp__claude_ai_Slack__slack_read_canvas",
+      "mcp__claude_ai_Slack__slack_update_canvas",
+      "Bash(jq -c '{t: [.issues[] | {k: .key, st: .fields.status.name, sc: .fields.status.statusCategory.key, p: .fields.priority.name, ty: .fields.issuetype.name, sub: .fields.issuetype.subtask, par: .fields.parent.key, cr: .fields.created, up: .fields.updated, dd: .fields.duedate, rd: .fields.resolutiondate, sp: .fields.customfield_10024, rsp: .fields.customfield_10127, sprs: [.fields.customfield_10021[]? | select\\(.state == \"active\"\\) | .name]}]}' mcp-claude_ai_Atlassian-searchJiraIssuesUsingJql-1779274186907.txt)",
+      "Bash(jq -c '{t: [.issues[] | {k: .key, st: .fields.status.name, sc: .fields.status.statusCategory.key, p: .fields.priority.name, ty: .fields.issuetype.name, sub: .fields.issuetype.subtask, par: .fields.parent.key, cr: .fields.created, up: .fields.updated, dd: .fields.duedate, rd: .fields.resolutiondate, sp: .fields.customfield_10024, rsp: .fields.customfield_10127, sprs: [.fields.customfield_10021[]? | select\\(.state == \"active\"\\) | .name]}]}' mcp-claude_ai_Atlassian-searchJiraIssuesUsingJql-1779274189978.txt)",
+      "mcp__claude_ai_Atlassian__fetch"
+    ],
+    "additionalDirectories": [
+      "/tmp",
+      "/private/tmp"
+    ]
+  }
+}
