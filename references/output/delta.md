@@ -46,19 +46,22 @@ These apply to every category. Render the message as Slack `mrkdwn` (the format 
 - **Status names go in backticks, in their human form.** Every status reference is monospaced — e.g. `` `In Review` ``, `` `In Progress` ``, `` `Blocked` ``, `` `To Do` ``, `` `Ready for Verification` ``. **Normalize Jira's machine form to the human form** before rendering: `IN_REVIEW` → `` `In Review` ``, `READY_FOR_VERIFICATION` → `` `Ready for Verification` ``, etc. The Jira API sometimes returns the UPPER_SNAKE shape on changelog entries; always re-shape to Title Case With Spaces. Keeps status names readable and visually distinct from priority labels. Applies everywhere statuses surface — status moves, threshold-crossings, "was `<status>`" parentheticals, and the Stuck section.
 - **Priorities are Slack emoji, never text.** Use the workspace's custom priority emoji inline next to the ticket key — `:priority-critical:`, `:priority-high:`, `:priority-medium:`, `:priority-low:`, `:priority-lowest:`. Position: **immediately after the ticket link, before the owner parens.** Example: `[ZETA-2700](…) :priority-high: (Frank) — ...`. **Never render the priority label as bracketed text** like `(High)` or `(Critical)`. If the workspace doesn't have a `:priority-<name>:` emoji set up, fall back to the bare priority word — but no brackets either way. If the ticket has no priority set, omit (no emoji, no text).
 - **Owners are first names, in parens.** Drop the surname in delta lines (`(Bob)` not `(Bob Smith)`) — the canvas carries full names; delta is scan-speed. The owner parens contain only the owner — priority does **not** go inside them anymore.
-- **Spread, don't stack.** One ticket per line. If multiple tickets share an owner and have no other differentiating info (typical Shipped case), group them on one comma-separated line with the owner once: `[GAMMA-663](…), [GAMMA-649](…) (Carol)`.
+- **Group by reportee, numbered list per person.** Every delta category except **Stuck** renders as a per-reportee group: name (no parens) on its own line, then a numbered list of that person's items indented underneath. The owner parens `(Bob)` are dropped from individual ticket lines inside the group since the group heading already names the owner. Skip a reportee entirely if they have no items in that section — never render an empty `Bob:` heading. Order reportees within a section by most-items-first; ties broken alphabetically.
+- **Stuck stays per-ticket.** The Stuck section is unusual — it lists items that haven't moved regardless of reportee, sorted by how long they've been stuck. Owner stays inline as `(Bob)`. See [Useful info — the "still standing" section](#useful-info--the-still-standing-section) for the full rule.
 
 ## "Today" block — render at the very top
 
-Before any delta category, render a small block of **today's people-availability picture**. These are the lines a manager wants to see *first* on opening the message — they reframe everything below ("oh, Eve is sick today, that explains the dip in Shipped"). All lines are conditional; skip any line that doesn't apply, and skip the whole block if every line is empty.
+Before any delta category, render a small block of **today's situational context**: overall sprint health, then people-availability. These are the lines a manager wants to see *first* on opening the message — they reframe everything below ("oh, Eve is sick today, that explains the dip in Shipped"). All lines are conditional; skip any line that doesn't apply, and skip the whole block if every line is empty.
 
 Order inside the block:
-1. **🌴 Out today** — anyone on PTO or sick *today*, regardless of when their absence started. One line: `🌴 Out today: <Name> (vacation), <Name> (sick)`. Emoji per person inline (`🌴` vacation, `🤒` sick) if you want; the default form is one collective line for scan-speed.
-2. **🌴 PTO starts today / ends today** — window-edge transitions, the same case the old category 6 covered. Phrase as `🌴 Bob — vacation starts today (May 22–26, 3d)` or `🤒 Eve — sick today (1d)`. One line per person. Skip if already covered by "Out today" — no duplication.
-3. **🇵🇱 Country holiday today** — one line per country (the group's `country` first, then each `info_countries` entry). Phrase as `🇵🇱 PL holiday today: Labour Day (May 1)`.
-4. **🇮🇱 Country holiday tomorrow** — heads-up line, especially for IL erev half-days. Phrase as `🇮🇱 IL holiday tomorrow: Shavuot (Fri 22 May)`.
+1. **🟡 Sprint health** — one-line traffic-light + headline numbers. Phrase as `🟡 Sprint health: 11 blocked (1 High), 2 unestimated in-flight, 2 days to sprint end (Grace).` Lifted from the old "still standing" section into the top because the manager wants overall posture before per-person specifics. Render only when the traffic light is non-green or any sprint is closing within 2 working days — on a steady 🟢 mid-sprint day, omit. (The traffic-light emoji on the title line already conveys the headline; the sprint-health line is for non-trivial situations.)
+2. **🌴 Out today** — anyone on PTO or sick *today*, regardless of when their absence started. One line: `🌴 Out today: <Name> (vacation), <Name> (sick)`. Emoji per person inline (`🌴` vacation, `🤒` sick) if you want; the default form is one collective line for scan-speed.
+3. **🌴 PTO starts today / ends today** — window-edge transitions, the same case the old category 6 covered. Phrase as `🌴 Bob — vacation starts today (May 22–26, 3d)` or `🤒 Eve — sick today (1d)`. One line per person. Skip if already covered by "Out today" — no duplication.
+4. **🇵🇱 Country holiday today** — one line per country (the group's `country` first, then each `info_countries` entry). Phrase as `🇵🇱 PL holiday today: Labour Day (May 1)`.
+5. **🇮🇱 Country holiday tomorrow** — heads-up line, especially for IL erev half-days. Phrase as `🇮🇱 IL holiday tomorrow: Shavuot (Fri 22 May)`.
 
 ```
+🟡 Sprint health: 11 blocked (1 High), 2 unestimated in-flight, 2 days to sprint end (Grace).
 🌴 Out today: Bob (vacation), Eve (sick)
 🇮🇱 IL holiday today: Shavuot (Fri 22 May)
 ```
@@ -88,12 +91,14 @@ Tickets that transitioned **to** a Blocked status in the last 24h.
 
 JQL: `assignee = "<accountId>" AND sprint in openSprints() AND status CHANGED TO "Blocked" AFTER -24h`
 
-One line per ticket: key, priority emoji, owner, time since the transition, and whether a comment was added at the time of the transition (pull last comment timestamp; if it's within ±10 minutes of the changelog entry, include the first line).
+Group by reportee. One numbered line per ticket: key, priority emoji, time since the transition, and whether a comment was added at the time of the transition (pull last comment timestamp; if it's within ±10 minutes of the changelog entry, include the first line).
 
 ```
 🚧 New blockers (2):
-  [ZETA-2700](https://acme.atlassian.net/browse/ZETA-2700) :priority-medium: (Frank) — `Blocked` 2h ago, no comment yet
-  [EPSILON-3900](https://acme.atlassian.net/browse/EPSILON-3900) :priority-high: (Grace) — `Blocked` 6h ago, "waiting on infra team"
+  Frank:
+    1. [ZETA-2700](https://acme.atlassian.net/browse/ZETA-2700) :priority-medium: — `Blocked` 2h ago, no comment yet
+  Grace:
+    1. [EPSILON-3900](https://acme.atlassian.net/browse/EPSILON-3900) :priority-high: — `Blocked` 6h ago, "waiting on infra team"
 ```
 
 ### 2. 🔄 Reopens
@@ -106,7 +111,8 @@ Reopened tickets are high-attention — surface the from/to and any explanatory 
 
 ```
 🔄 Reopened (1):
-  [ALPHA-1009](https://acme.atlassian.net/browse/ALPHA-1009) :priority-medium: (Bob) — `Done` → `In Review`, "Netlify failure"
+  Bob:
+    1. [ALPHA-1009](https://acme.atlassian.net/browse/ALPHA-1009) :priority-medium: — `Done` → `In Review`, "Netlify failure"
 ```
 
 ### 3. ⚠️ Threshold crossings (newly stuck / now at-risk)
@@ -115,16 +121,28 @@ Surface tickets that **just crossed** a threshold the canvas would also flag —
 
 - **Stuck >3d in an in-flight status.** A ticket is "newly stuck" when its current `time_in_status` is between 72h and 96h AND there was no status change in the last 24h. The 72–96h band means the threshold was crossed between yesterday and today. Pull `time_in_status` from the changelog (most-recent status transition timestamp). Eligible statuses: In Progress, In Review, Blocked, Verification, Verified. Exclude To Do, Dev Ready, Merged, Done.
 - **Due date now ≤2d.** Ticket has `duedate >= today AND duedate <= today + 2 days AND duedate > today - 1 days` from yesterday's reference frame. In practice: a ticket whose `duedate` is today, tomorrow, or the day after, and was *not* in that window yesterday. Approximate by: `duedate <= today + 2d AND duedate >= today + 2d` (i.e., the duedate is exactly 2 days out — that's the day the threshold first fires). Acceptable to also include `duedate = today + 1d` if the spec is being strict about same-day clarity.
-- **Sprint ends ≤2d with this ticket still not done.** Same logic against `sprint.endDate` rather than `duedate`. **Fri-end ≈ Mon-end of the same close-out week** — see [../analysis.md](../analysis.md) "Practical Jira-MCP tips → Time math". Don't fire this on Friday for a Fri-ending sprint when you wouldn't also fire it on the prior Thursday for a Monday-ending sprint — the weekend collapses the gap and singling out Friday-ending sprints is noise.
+- **Sprint ends ≤2d with these tickets still not done.** Same logic against `sprint.endDate` rather than `duedate`. **Fri-end ≈ Mon-end of the same close-out week** — see [../analysis.md](../analysis.md) "Practical Jira-MCP tips → Time math". Don't fire this on Friday for a Fri-ending sprint when you wouldn't also fire it on the prior Thursday for a Monday-ending sprint — the weekend collapses the gap and singling out Friday-ending sprints is noise.
+  - **Priority filter:** within this sub-block, render **Critical / Highest / P0 / Blocker / High / P1 / Medium / P2 only**. Drop Low, Lowest, Lowest-equivalent, and unprioritized tickets — a sprint closing with un-prioritized low work isn't urgent enough for the delta's top-attention block (it'll still appear in the canvas's risk breakdown). The rationale: this block is meant to drive end-of-sprint triage, and low-priority unfinished work is generally fine to push to the next sprint.
+  - **Sort descending by priority** within the block: Critical → High → Medium. Don't break by status or owner — the priority signal is the whole point.
+  - **One ticket per line.** Never comma-group multiple keys on a line, even when several tickets share the same owner/status — this block needs to be scannable item-by-item under deadline pressure.
 
 These can each be computed without a snapshot — they're all functions of the current changelog and current dates.
 
+The Newly-stuck and Due-now sub-blocks follow the **group-by-reportee** format (per [Per-line formatting rules](#per-line-formatting-rules)). The **Sprint-ends-≤2d** sub-block follows a **per-sprint** header instead — the heading names the sprint (and its closing owner) and tickets are listed flat below it, since the manager's question here is "what's outstanding on Sprint X" not "what's each person doing":
+
 ```
 ⚠️ Newly stuck >3d:
-  [ETA-5404](https://acme.atlassian.net/browse/ETA-5404) :priority-medium: (Dave) — `In Review` 3d (sprint ends Fri)
+  Dave:
+    1. [ETA-5404](https://acme.atlassian.net/browse/ETA-5404) :priority-medium: — `In Review` 3d (sprint ends Fri)
 
 ⚠️ Due now ≤2d:
-  [ALPHA-1009](https://acme.atlassian.net/browse/ALPHA-1009) :priority-high: (Bob, due 23 May)
+  Bob:
+    1. [ALPHA-1009](https://acme.atlassian.net/browse/ALPHA-1009) :priority-high: — due 23 May
+
+⚠️ EPSILON Sprint 12 ends today (Grace) — 3 not done:
+  1. [EPSILON-3792](https://acme.atlassian.net/browse/EPSILON-3792) :priority-high: — `In Review`
+  2. [EPSILON-3848](https://acme.atlassian.net/browse/EPSILON-3848) :priority-high: — `In Review`
+  3. [EPSILON-3837](https://acme.atlassian.net/browse/EPSILON-3837) :priority-medium: — `In Progress` (8 SP)
 ```
 
 ### 4. 🆕 Late sprint additions
@@ -135,8 +153,10 @@ JQL: `assignee = "<accountId>" AND sprint in openSprints() AND sprint CHANGED AF
 
 ```
 🆕 Added to sprint (2):
-  [ALPHA-1112](https://acme.atlassian.net/browse/ALPHA-1112) :priority-medium: (Bob, 4 SP) — added today, +20h to his load
-  [ZETA-2710](https://acme.atlassian.net/browse/ZETA-2710) :priority-low: (Frank, 1 SP)
+  Bob:
+    1. [ALPHA-1112](https://acme.atlassian.net/browse/ALPHA-1112) :priority-medium: — added today, 4 SP, +20h to his load
+  Frank:
+    1. [ZETA-2710](https://acme.atlassian.net/browse/ZETA-2710) :priority-low: — 1 SP
 ```
 
 Skip if the additions are sub-tasks of an in-progress parent — those are normal mid-sprint breakdown, not real additions.
@@ -153,8 +173,10 @@ Per result line: ticket key, owner, prior SP, status when removed, and where the
 
 ```
 🚮 Removed from sprint (2):
-  [ETA-5404](https://acme.atlassian.net/browse/ETA-5404) :priority-medium: (Dave, 4 SP, was `Blocked`) — pushed to ETA Sprint 13
-  [ALPHA-1010](https://acme.atlassian.net/browse/ALPHA-1010) :priority-medium: (Bob, 4 SP, was `Backlog`) — back to backlog
+  Dave:
+    1. [ETA-5404](https://acme.atlassian.net/browse/ETA-5404) :priority-medium: — 4 SP, was `Blocked`, pushed to ETA Sprint 13
+  Bob:
+    1. [ALPHA-1010](https://acme.atlassian.net/browse/ALPHA-1010) :priority-medium: — 4 SP, was `Backlog`, back to backlog
 ```
 
 Destination phrasing matches the canvas's Section 1b ([canvas.md](canvas.md) "Removed since last canvas"): "pushed to <Sprint Name>" / "back to backlog" / "moved to <Sprint Name>".
@@ -182,10 +204,14 @@ The prose is *optional* — drop it if the move is unremarkable. The fact that i
 
 ```
 🔁 Status moves (4):
-  [ALPHA-1009](https://acme.atlassian.net/browse/ALPHA-1009) :priority-medium: (Bob) → `In Review` (PR opened)
-  [ETA-5592](https://acme.atlassian.net/browse/ETA-5592) :priority-medium: (Dave) → `In Review`
-  [GAMMA-551](https://acme.atlassian.net/browse/GAMMA-551) :priority-medium: (Carol) → `In Progress` (carry-over resumed)
-  [DELTA-2810](https://acme.atlassian.net/browse/DELTA-2810) :priority-medium: (Eve) → `Verification` (QA can pick up)
+  Bob:
+    1. [ALPHA-1009](https://acme.atlassian.net/browse/ALPHA-1009) :priority-medium: → `In Review` (PR opened)
+  Dave:
+    1. [ETA-5592](https://acme.atlassian.net/browse/ETA-5592) :priority-medium: → `In Review`
+  Carol:
+    1. [GAMMA-551](https://acme.atlassian.net/browse/GAMMA-551) :priority-medium: → `In Progress` (carry-over resumed)
+  Eve:
+    1. [DELTA-2810](https://acme.atlassian.net/browse/DELTA-2810) :priority-medium: → `Verification` (QA can pick up)
 ```
 
 ### 6. ✅ Shipped
@@ -198,68 +224,94 @@ The wins. Closes the message on movement rather than red flags.
 
 ```
 ✅ Shipped (4):
-  [GAMMA-663](https://acme.atlassian.net/browse/GAMMA-663), [GAMMA-649](https://acme.atlassian.net/browse/GAMMA-649) (Carol)
-  [DELTA-2722](https://acme.atlassian.net/browse/DELTA-2722) (Eve)
-  [EPSILON-3848](https://acme.atlassian.net/browse/EPSILON-3848) (Grace)
+  Carol:
+    1. [GAMMA-663](https://acme.atlassian.net/browse/GAMMA-663)
+    2. [GAMMA-649](https://acme.atlassian.net/browse/GAMMA-649)
+  Eve:
+    1. [DELTA-2722](https://acme.atlassian.net/browse/DELTA-2722)
+  Grace:
+    1. [EPSILON-3848](https://acme.atlassian.net/browse/EPSILON-3848)
 ```
 
-Group by owner if more than 1 per person. Priority emoji is **optional in Shipped** — once a ticket's done, its priority no longer matters for action and the line reads cleaner without it. Include only if the workspace convention is to keep emojis everywhere.
+Priority emoji is **optional in Shipped** — once a ticket's done, its priority no longer matters for action and the line reads cleaner without it. Include only if the workspace convention is to keep emojis everywhere.
 
-## Useful info — the "still standing" section
+## Useful info — the "Stuck" section
 
-Beyond pure deltas, the manager wants 1–2 lines of persistent context they shouldn't have to remember. **Each line is conditional**: render only if the underlying signal applies. Skip the whole section if every line is empty. (Country-holiday lines used to live here — they moved to the **Today** block at the top.)
+A single persistent block: every ticket that's been **stuck in an in-flight or blocked status for more than 14 days**, regardless of priority and regardless of which reportee owns it. Stagnation past two weeks is the signal — at that point it doesn't matter whether the ticket is High, Medium, or Low; nothing has moved, and the manager should see it.
 
-- The **highest-attention item that hasn't moved** — labelled **📌 Stuck**. E.g. `[ZETA-2624](…) :priority-high: — \`Blocked\` 12d (no movement)` — surfaces every day it doesn't change, since stagnation IS the signal. Pull from the canvas's most recent at-risk/blocked top-5; render only if at least one of those items shows no changelog activity in the last 24h. (Renamed from "Still open" — "Stuck" makes the signal explicit: the ticket is unmoving, not just unfinished.)
-- **Headline numbers**: total in-flight, days left in sprint, 1-line traffic light. Render only on days where the traffic light is non-green or sprint is closing within 2 working days; otherwise it's clutter.
-- **Link to most recent canvas** — render only when a canvas is available to link to (which is essentially always after the first Mon/Thu of the sprint). Drop if missing rather than emitting a broken link.
+- **Threshold:** `time_in_status > 14 calendar days` (no exception for priority, owner, sprint, or assignee absence).
+- **Eligible statuses:** `In Progress`, `In Review`, `Blocked`, `Verification`, `Verified`, `Ready for Verification`. Skip `To Do`, `Backlog`, `Development Ready`, `Done`, `Merged`, `Won't Do`.
+- **Source of truth:** the live Jira changelog. Don't depend on the canvas's at-risk/blocked top-5 anymore — that list filtered by priority and capped the count; this block intentionally doesn't.
+- **No artificial cap.** Show all qualifying tickets. If a team has 12 tickets stuck >14d, the manager should see all 12 — the volume itself is signal.
+- **Stuck is unusual** — it does NOT use the group-by-reportee format. List one ticket per line, sorted by **days stuck descending**, with owner inline as `(Owner)`. This is the only delta section where owner stays in parens on the ticket line.
 
 ```
-📌 Stuck:
-  [ZETA-2624](https://acme.atlassian.net/browse/ZETA-2624) :priority-high: (Bob) — `Blocked` 12d (no movement since Mon)
-
-🟡 Sprint health: 11 blocked (1 High), 2 unestimated in-flight, 2 days to sprint end (Grace).
-📄 Full report: <link to last canvas>
+📌 Stuck (3):
+  [ZETA-2624](https://acme.atlassian.net/browse/ZETA-2624) :priority-high: (Bob) — `Blocked` 18d
+  [DELTA-2810](https://acme.atlassian.net/browse/DELTA-2810) :priority-medium: (Eve) — `In Progress` 17d
+  [ALPHA-1102](https://acme.atlassian.net/browse/ALPHA-1102) :priority-low: (Carol) — `In Review` 15d
 ```
 
-The Stuck line is judgment-driven: surface 1 ticket (max 2) that's been stuck the longest with the highest priority. Don't list every standing blocker — that's what the canvas is for.
+(Renamed from "Still open" — "Stuck" makes the signal explicit: the ticket is unmoving, not just unfinished. Threshold raised from the previous "no movement in 24h on a canvas-top-5 item" to ">14 days regardless of priority" because the old threshold under-surfaced long-tail forgotten work.)
 
 ## Format — full skeleton
 
 ```
-🟡 Sprint 12 — daily delta (Tue 21 May)
+🔴 Sprint 12 — daily delta for Alice (Fri 22 May) <@U001AAAAAA1>
 
+🟡 Sprint health: 11 blocked (1 High), 2 unestimated in-flight, 2 days to sprint end (Grace).
 🌴 Out today: Bob (vacation), Eve (sick)
 🇮🇱 IL holiday today: Shavuot (Fri 22 May)
 
 🚧 New blockers (2):
-  [ZETA-2700](https://acme.atlassian.net/browse/ZETA-2700) :priority-medium: (Frank) — `Blocked` 2h ago
-  [EPSILON-3900](https://acme.atlassian.net/browse/EPSILON-3900) :priority-high: (Grace) — `Blocked` 6h ago
+  Frank:
+    1. [ZETA-2700](https://acme.atlassian.net/browse/ZETA-2700) :priority-medium: — `Blocked` 2h ago
+  Grace:
+    1. [EPSILON-3900](https://acme.atlassian.net/browse/EPSILON-3900) :priority-high: — `Blocked` 6h ago
 
 🔄 Reopened (1):
-  [ALPHA-1009](https://acme.atlassian.net/browse/ALPHA-1009) :priority-medium: (Bob) — `Done` → `In Review`
+  Bob:
+    1. [ALPHA-1009](https://acme.atlassian.net/browse/ALPHA-1009) :priority-medium: — `Done` → `In Review`
 
 ⚠️ Newly stuck >3d:
-  [ETA-5404](https://acme.atlassian.net/browse/ETA-5404) :priority-medium: (Dave) — `In Review` 3d
+  Dave:
+    1. [ETA-5404](https://acme.atlassian.net/browse/ETA-5404) :priority-medium: — `In Review` 3d
+
+⚠️ EPSILON Sprint 12 ends today (Grace) — 3 not done:
+  1. [EPSILON-3792](https://acme.atlassian.net/browse/EPSILON-3792) :priority-high: — `In Review`
+  2. [EPSILON-3848](https://acme.atlassian.net/browse/EPSILON-3848) :priority-high: — `In Review`
+  3. [EPSILON-3837](https://acme.atlassian.net/browse/EPSILON-3837) :priority-medium: — `In Progress` (8 SP)
 
 🆕 Added to sprint (1):
-  [ALPHA-1112](https://acme.atlassian.net/browse/ALPHA-1112) :priority-medium: (Bob, 4 SP) — added today
+  Bob:
+    1. [ALPHA-1112](https://acme.atlassian.net/browse/ALPHA-1112) :priority-medium: — added today, 4 SP
 
 🔁 Status moves (3):
-  [ETA-5592](https://acme.atlassian.net/browse/ETA-5592) :priority-medium: (Dave) → `In Review` (PR opened)
-  [GAMMA-551](https://acme.atlassian.net/browse/GAMMA-551) :priority-medium: (Carol) → `In Progress` (carry-over resumed)
-  [DELTA-2810](https://acme.atlassian.net/browse/DELTA-2810) :priority-medium: (Eve) → `Verification` (QA can pick up)
+  Dave:
+    1. [ETA-5592](https://acme.atlassian.net/browse/ETA-5592) :priority-medium: → `In Review` (PR opened)
+  Carol:
+    1. [GAMMA-551](https://acme.atlassian.net/browse/GAMMA-551) :priority-medium: → `In Progress` (carry-over resumed)
+  Eve:
+    1. [DELTA-2810](https://acme.atlassian.net/browse/DELTA-2810) :priority-medium: → `Verification` (QA can pick up)
 
 ✅ Shipped (3):
-  [GAMMA-663](https://acme.atlassian.net/browse/GAMMA-663), [GAMMA-649](https://acme.atlassian.net/browse/GAMMA-649) (Carol)
-  [DELTA-2722](https://acme.atlassian.net/browse/DELTA-2722) (Eve)
+  Carol:
+    1. [GAMMA-663](https://acme.atlassian.net/browse/GAMMA-663)
+    2. [GAMMA-649](https://acme.atlassian.net/browse/GAMMA-649)
+  Eve:
+    1. [DELTA-2722](https://acme.atlassian.net/browse/DELTA-2722)
 
-📌 Stuck:
-  [ZETA-2624](https://acme.atlassian.net/browse/ZETA-2624) :priority-high: (Bob) — `Blocked` 12d (no movement)
-
-📄 Full report: https://acme.slack.com/docs/.../<canvas-id>
+📌 Stuck (2):
+  [ZETA-2624](https://acme.atlassian.net/browse/ZETA-2624) :priority-high: (Bob) — `Blocked` 18d
+  [DELTA-2810](https://acme.atlassian.net/browse/DELTA-2810) :priority-medium: (Eve) — `In Progress` 16d
 ```
 
-This is the *maximum* shape. A real run will usually have several of these sections missing — skip them, don't render `None.` Section order is **attention first → informational → wins**: blockers, reopens, threshold crossings, sprint additions/removals, then status moves, then Shipped, then the persistent Stuck/sprint-health/canvas-link block. The old "Since yesterday. N days left in sprint" subline has been removed; the title carries the date, and "days left" only shows up via the conditional sprint-health line when it actually matters.
+This is the *maximum* shape. A real run will usually have several of these sections missing — skip them, don't render `None.` Section order:
+1. **Today block at the top** — sprint health, Out today, holidays.
+2. **Delta categories**, attention-first: blockers, reopens, threshold crossings, sprint additions/removals, status moves, Shipped.
+3. **Stuck** — long-tail forgotten work (>14d in in-flight/blocked), at the bottom.
+
+No more **📄 Full report** link line. The daily delta is meant to be self-contained — the canvas is its own surface posted twice a week, and the manager finds it independently in Slack. The old "Since yesterday. N days left in sprint" subline is also gone; the title carries the date and the sprint-health line (when present) carries the days-left.
 
 ## Quiet days
 
@@ -267,7 +319,7 @@ If every category is empty (no new blockers, no reopens, no shipped tickets, no 
 
 ```
 🟢 Sprint 12 — daily delta (Wed 22 May)
-No material changes in the last 24h. 📄 Full report: <link>
+No material changes in the last 24h.
 ```
 
 Reasoning: a silent ping confirms the routine ran. A missing ping makes the manager wonder if the skill broke.
@@ -296,6 +348,7 @@ On a channel post the leading line is the daily-delta title naming the manager, 
 ```
 🔴 Sprint 12 — daily delta for Alice (Fri 22 May) <@U001AAAAAA1>
 
+🟡 Sprint health: 11 blocked (1 High), 2 days to sprint end (Grace).
 🌴 Out today: Eve (sick)
 🇮🇱 IL holiday today: Shavuot (Fri 22 May)
 
@@ -305,7 +358,7 @@ On a channel post the leading line is the daily-delta title naming the manager, 
 
 Putting the name in the title text (`for Alice`) makes the Slack notification preview legible — managers see "Sprint 12 — daily delta for Alice" without depending on mention resolution. The `<@USERID>` at the end is what actually pings.
 
-The **Today** block sits between the title and the first delta category — anything urgent about people-availability shows immediately under the title.
+The **Today** block sits between the title and the first delta category — sprint health + anything urgent about people-availability shows immediately under the title.
 
 On a DM (legacy fallback when `output_channel` is `null`) the tag is dropped — the DM target is already the audience and a self-mention is noise.
 
