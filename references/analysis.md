@@ -496,11 +496,11 @@ Canvas mode's Section 2 (Capacity overview) renders a `prev_% → new_% · reaso
    ```
    assignee = "<accountId>" AND sprint CHANGED FROM <prior_sprint_id> AFTER "<prior_canvas_posted_at>"
    ```
-   **Crucially do NOT add `sprint in openSprints()` to this query** — the removed ticket may no longer be in any open sprint. Per result, fetch `summary`, current `status`, `priority`, SP (`jira_field_ids.story_points`), and current `customfield_<sprint>` membership (used to decide "pushed to <next sprint>" vs "back to backlog"). Feeds [output/canvas.md](output/canvas.md) Section 1b and the delta's category 7b.
+   **Crucially do NOT add `sprint in openSprints()` to this query** — the removed ticket may no longer be in any open sprint. Per result, fetch `summary`, current `status`, `priority`, SP (`jira_field_ids.story_points`), and current `customfield_<sprint>` membership (used to decide "pushed to <next sprint>" vs "back to backlog"). Feeds [output/canvas.md](output/canvas.md) Section 1b and the delta's category 6b.
 
    **Same JQL pattern, different window for the delta**: when rendering delta mode, the window is `-24h` rather than `AFTER "<prior_canvas_posted_at>"`. Otherwise identical — the canvas and delta render formats share one detection mechanism, two scopes.
 
-These hooks add at most three extra calls per canvas (one Slack search + `slack_read_canvas` to find/read the prior canvas, one "removed from sprint" JQL per reportee for the inter-canvas window, one extra "removed from sprint" JQL per reportee if Section 1b fires) — cheap, and only paid on canvas runs, not deltas (deltas pay their own one-call-per-reportee for category 7b).
+These hooks add at most three extra calls per canvas (one Slack search + `slack_read_canvas` to find/read the prior canvas, one "removed from sprint" JQL per reportee for the inter-canvas window, one extra "removed from sprint" JQL per reportee if Section 1b fires) — cheap, and only paid on canvas runs, not deltas (deltas pay their own one-call-per-reportee for category 6b).
 
 ### Step 9 — Post the channel message linking to the canvas
 

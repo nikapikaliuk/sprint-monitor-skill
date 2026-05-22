@@ -109,7 +109,7 @@ If only one reportee has removals, drop the per-reportee grouping and just list 
 
 Sprint removals are a discipline signal worth seeing explicitly — they're the most likely cause when the Capacity overview's `prev_% → new_%` line drops without an obvious "lots of stuff shipped" story. Surfacing the keys lets the manager (a) sanity-check that the removals were intentional, and (b) chase any that quietly walked out of the sprint without a decision.
 
-Pairs with the delta's "🚮 Removed from sprint" category ([../output/delta.md](../output/delta.md) category 7b) — same signal, 24h scope instead of inter-canvas scope.
+Pairs with the delta's "🚮 Removed from sprint" category ([../output/delta.md](../output/delta.md) category 6b) — same signal, 24h scope instead of inter-canvas scope.
 
 ## 2. Capacity overview
 

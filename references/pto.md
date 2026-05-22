@@ -68,9 +68,12 @@ The skill auto-discovers PTO from each reportee's Google Calendar at the start o
 
 ### When it runs
 
-- **Canvas runs only** (Mon / Thu). The delta does not re-fetch — PTO is sprint-scope, not 24h-scope, and the daily delta is a short-cycle pulse-check that doesn't pay the calendar cost.
-- Runs after the inline config is parsed, before Step 6's capacity math in [analysis.md](analysis.md) — the synced entries need to be in the in-memory `pto[]` arrays for `capacity_hours` to scale correctly.
-- **Hard-error if the Google Calendar MCP isn't authenticated at the start of a canvas run.** Capacity math without the calendar produces misleading verdicts; silently skipping the sync would let a Borderline call sit on top of unreflected PTO. Emit *"Sprint Monitor cannot run: Google Calendar MCP not authenticated. PTO sync is required for accurate capacity math."* to the report destination and stop. The manager re-authenticates locally and the next routine run picks it up.
+- **Canvas runs** (Mon / Thu) — **sprint-window fetch.** Pull every all-day OOO event overlapping `sprint.startDate → sprint.endDate` for each reportee. This is the load-bearing fetch — capacity math reads from it.
+- **Delta runs** (Tue / Wed / Fri) — **today-only fetch.** Pull every all-day OOO event overlapping just today, per reportee. Much smaller than the canvas fetch (no historical events, no future events past today), and only feeds the **Today** block in [output/delta.md](output/delta.md) — capacity math does not run on deltas. Added so ongoing mid-vacation PTO ("Eve is out today, day 3 of 5") surfaces in the daily delta; without it, the delta only sees PTO whose `start` or `end` equals today.
+- Runs after the inline config is parsed, before any output assembly — the synced entries need to be in the in-memory `pto[]` arrays for downstream sections to read.
+- **Auth handling differs by mode:**
+  - **Canvas:** hard-error if the Google Calendar MCP isn't authenticated. Capacity math without the calendar produces misleading verdicts; silently skipping the sync would let a Borderline call sit on top of unreflected PTO. Emit *"Sprint Monitor cannot run: Google Calendar MCP not authenticated. PTO sync is required for accurate capacity math."* and stop.
+  - **Delta:** soft-degrade. If the calendar MCP isn't authenticated, fall back to inlined-only PTO and add a one-line note at the bottom of the delta: *"⚠️ Calendar not authenticated — PTO only from inline config."* Don't hard-fail — the delta is still useful without it.
 
 ### What it queries
 
@@ -261,31 +264,27 @@ The total budget is 64 instead of 80, and the verdict reflects the scaled thresh
 
 ### In the delta ([delta.md](output/delta.md))
 
-**1. New category: 🌴 PTO updates** — surface when someone's PTO window edge falls on today (starts today, ends today). Without persisted state, the delta can't detect "new since yesterday"; it only fires the today-edge case:
+All PTO and holiday surfaces live in the delta's **Today** block at the very top of the message — see [output/delta.md](output/delta.md) "Today block" for the full spec. Summary:
+
+**1. 🌴 Out today** — every reportee who is on PTO or sick *today*, sourced from the union of inlined `pto[]` arrays + the delta-time Google Calendar fetch. One collective line:
 
 ```
-🌴 PTO updates (2):
-  Bob — out today (vacation, May 20–22, 3d)
-  Eve — sick today
-```
-
-**2. Persistent info — "Out today" line:** if anyone is on PTO/sick today, mention at the top of the persistent info section.
-
-```
-📌 Still open:
-  ZETA-2624 (High) — Blocked 12d (no movement)
-
 🌴 Out today: Bob (vacation), Eve (sick)
 ```
 
-**3. Persistent info — country-holiday lines:** if today is a public holiday in the group's `country`, OR in any of its `info_countries`, prepend one line per country. `country` first, then `info_countries` in array order. Skip the country's line if today isn't a holiday for that country.
+This catches both window-edge PTO ("Eve's vacation starts today") and ongoing mid-vacation PTO ("Bob is day 3 of 5"). Earlier spec revisions only surfaced edges (a "PTO updates" category for `start == today` or `end == today`); that missed people sitting in the middle of a vacation, which is the most common case. The "Out today" line replaces the edge-only category — it covers both, more legibly.
+
+**2. 🌴 PTO starts today / ends today** — *separately,* call out window-edge transitions if you want extra detail on what changed at midnight. Optional and only shown when it adds info beyond "Out today" (e.g. "Bob's sick leave ended today, back tomorrow"). Skip otherwise.
+
+**3. 🇵🇱 Country holiday today / tomorrow** — if today is a public holiday for the group's `country` or any `info_countries`, render a line per country. `country` first, then `info_countries` in array order. The "tomorrow" half is a heads-up for IL erev half-days (see [holidays.md](holidays.md) `half_day` flags).
 
 ```
 🇵🇱 PL holiday today: Labour Day (May 1)
 🇮🇱 IL holiday today: Shavuot (May 22)
+🇮🇱 IL holiday tomorrow: Shavuot (Fri 22 May)
 ```
 
-Bare lines — just flag, country code, name, date. No suffix explaining capacity impact in either case. The `country` line's reduction was already applied silently in the math; the `info_countries` line never affects capacity. Neither needs prose.
+Bare lines — just flag, country code, name, date. The `country` line's capacity reduction was already applied silently on the most recent canvas; the `info_countries` line never affects capacity. Neither needs an inline explanation.
 
 ## Edge cases
 
