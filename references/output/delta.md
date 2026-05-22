@@ -124,8 +124,8 @@ Surface tickets that **just crossed** a threshold the canvas would also flag —
 - **Sprint ends ≤2d with these tickets still not done.** Same logic against `sprint.endDate` rather than `duedate`. **Fri-end ≈ Mon-end of the same close-out week** — see [../analysis.md](../analysis.md) "Practical Jira-MCP tips → Time math". Don't fire this on Friday for a Fri-ending sprint when you wouldn't also fire it on the prior Thursday for a Monday-ending sprint — the weekend collapses the gap and singling out Friday-ending sprints is noise.
   - **Priority filter:** within this sub-block, render **Critical / Highest / P0 / Blocker / High / P1 / Medium / P2 only**. Drop Low, Lowest, Lowest-equivalent, and unprioritized tickets — a sprint closing with un-prioritized low work isn't urgent enough for the delta's top-attention block (it'll still appear in the canvas's risk breakdown). The rationale: this block is meant to drive end-of-sprint triage, and low-priority unfinished work is generally fine to push to the next sprint.
   - **Owner grouping:**
-    - **One owner** in the not-done set → flat numbered list under the sprint header, sorted descending by priority (Critical → High → Medium). Each ticket line is prefixed with one tab character.
-    - **Multiple owners** → break down by reportee: name on its own line, then a numbered list of that person's tickets nested under. **Use literal tab characters for indentation**, not spaces — one tab before the reportee name, two tabs before each numbered ticket line. Reportees ordered by **most-items-first**, ties broken alphabetically. Within each person, sort tickets descending by priority then descending by SP.
+    - **One owner** in the not-done set → flat unnumbered list under the sprint header, sorted descending by priority (Critical → High → Medium). Each ticket line is prefixed with 8 spaces (no numbered prefix — drop the `1.` / `2.` / `3.`).
+    - **Multiple owners** → break down by reportee: name on its own line, then that person's tickets nested under. **Use literal spaces for indentation, not tab characters** — Slack mrkdwn does not reliably render tabs as indent, so a tab-indented message collapses flush-left. Use **3 spaces before the reportee name** and **8 spaces before each ticket line**. **Drop numbered prefixes** on ticket lines — the indent depth alone makes the hierarchy clear and avoids visual noise across long lists. Reportees ordered by **most-items-first**, ties broken alphabetically. Within each person, sort tickets descending by priority then descending by SP.
   - **One ticket per line.** Never comma-group multiple keys on a line, even when several tickets share the same owner/status — this block needs to be scannable item-by-item under deadline pressure.
   - **Drop the per-ticket owner parens** in the multi-owner form — the reportee sub-heading already names the owner. Owner parens stay only in the single-owner-flat-list form, and even there they're redundant; prefer omitting.
 
@@ -146,28 +146,28 @@ The Newly-stuck and Due-now sub-blocks follow the **group-by-reportee** format (
     1. [ALPHA-1009](https://acme.atlassian.net/browse/ALPHA-1009) :priority-high: — due 23 May
 
 ⚠️ GX Sprint 185 ends Sun May 24 — 14 not done:
-	Olga:
-		1. [GX-3707](https://acme.atlassian.net/browse/GX-3707) :priority-medium: — `Development Ready` (4 SP)
-		2. [GX-3625](https://acme.atlassian.net/browse/GX-3625) :priority-medium: — `Development Ready` (4 SP)
-		3. [GX-3554](https://acme.atlassian.net/browse/GX-3554) :priority-medium: — `In Progress` (4 SP)
-		4. [GX-3317](https://acme.atlassian.net/browse/GX-3317) :priority-medium: — `Merged` (4 SP)
-		5. [GX-3546](https://acme.atlassian.net/browse/GX-3546) :priority-medium: — `In Review` (2 SP)
-		6. [GX-3547](https://acme.atlassian.net/browse/GX-3547) :priority-medium: — `Backlog` (2 SP)
-	Illia:
-		1. [GX-3557](https://acme.atlassian.net/browse/GX-3557) :priority-medium: — `Merged` (8 SP)
-		2. [GX-3556](https://acme.atlassian.net/browse/GX-3556) :priority-medium: — `In Review` (8 SP)
-		3. [GX-3772](https://acme.atlassian.net/browse/GX-3772) :priority-medium: — `To Do` (4 SP)
-		4. [GX-3577](https://acme.atlassian.net/browse/GX-3577) :priority-medium: — `Merged` (2 SP)
-		5. [GX-3771](https://acme.atlassian.net/browse/GX-3771) :priority-medium: — `Merged` (1 SP)
-	Eugene:
-		1. [GX-3696](https://acme.atlassian.net/browse/GX-3696) :priority-medium: — `Development Ready` (8 SP)
-		2. [GX-3700](https://acme.atlassian.net/browse/GX-3700) :priority-medium: — `Backlog` (4 SP)
-		3. [GX-3695](https://acme.atlassian.net/browse/GX-3695) :priority-medium: — `In Progress` (4 SP)
+   Olga:
+        [GX-3707](https://acme.atlassian.net/browse/GX-3707) :priority-medium: — `Development Ready` (4 SP)
+        [GX-3625](https://acme.atlassian.net/browse/GX-3625) :priority-medium: — `Development Ready` (4 SP)
+        [GX-3554](https://acme.atlassian.net/browse/GX-3554) :priority-medium: — `In Progress` (4 SP)
+        [GX-3317](https://acme.atlassian.net/browse/GX-3317) :priority-medium: — `Merged` (4 SP)
+        [GX-3546](https://acme.atlassian.net/browse/GX-3546) :priority-medium: — `In Review` (2 SP)
+        [GX-3547](https://acme.atlassian.net/browse/GX-3547) :priority-medium: — `Backlog` (2 SP)
+   Illia:
+        [GX-3557](https://acme.atlassian.net/browse/GX-3557) :priority-medium: — `Merged` (8 SP)
+        [GX-3556](https://acme.atlassian.net/browse/GX-3556) :priority-medium: — `In Review` (8 SP)
+        [GX-3772](https://acme.atlassian.net/browse/GX-3772) :priority-medium: — `To Do` (4 SP)
+        [GX-3577](https://acme.atlassian.net/browse/GX-3577) :priority-medium: — `Merged` (2 SP)
+        [GX-3771](https://acme.atlassian.net/browse/GX-3771) :priority-medium: — `Merged` (1 SP)
+   Eugene:
+        [GX-3696](https://acme.atlassian.net/browse/GX-3696) :priority-medium: — `Development Ready` (8 SP)
+        [GX-3700](https://acme.atlassian.net/browse/GX-3700) :priority-medium: — `Backlog` (4 SP)
+        [GX-3695](https://acme.atlassian.net/browse/GX-3695) :priority-medium: — `In Progress` (4 SP)
 
 ⚠️ EPSILON Sprint 12 ends today — 3 not done:
-	1. [EPSILON-3792](https://acme.atlassian.net/browse/EPSILON-3792) :priority-high: — `In Review` (3 SP)
-	2. [EPSILON-3848](https://acme.atlassian.net/browse/EPSILON-3848) :priority-high: — `In Review` (5 SP)
-	3. [EPSILON-3837](https://acme.atlassian.net/browse/EPSILON-3837) :priority-medium: — `In Progress` (8 SP)
+        [EPSILON-3792](https://acme.atlassian.net/browse/EPSILON-3792) :priority-high: — `In Review` (3 SP)
+        [EPSILON-3848](https://acme.atlassian.net/browse/EPSILON-3848) :priority-high: — `In Review` (5 SP)
+        [EPSILON-3837](https://acme.atlassian.net/browse/EPSILON-3837) :priority-medium: — `In Progress` (8 SP)
 ```
 
 (First example: 3 owners → grouped breakdown. Second example: 1 owner → flat list. Note the multi-owner header drops the `(Closing-Owner)` parens — with per-person sub-headings below, listing contributors in the header would duplicate that information.)
@@ -305,9 +305,9 @@ A single persistent block: every ticket that's been **stuck in an in-flight or b
     1. [ETA-5404](https://acme.atlassian.net/browse/ETA-5404) :priority-medium: — `In Review` 3d
 
 ⚠️ EPSILON Sprint 12 ends today — 3 not done:
-  1. [EPSILON-3792](https://acme.atlassian.net/browse/EPSILON-3792) :priority-high: — `In Review` (3 SP)
-  2. [EPSILON-3848](https://acme.atlassian.net/browse/EPSILON-3848) :priority-high: — `In Review` (5 SP)
-  3. [EPSILON-3837](https://acme.atlassian.net/browse/EPSILON-3837) :priority-medium: — `In Progress` (8 SP)
+        [EPSILON-3792](https://acme.atlassian.net/browse/EPSILON-3792) :priority-high: — `In Review` (3 SP)
+        [EPSILON-3848](https://acme.atlassian.net/browse/EPSILON-3848) :priority-high: — `In Review` (5 SP)
+        [EPSILON-3837](https://acme.atlassian.net/browse/EPSILON-3837) :priority-medium: — `In Progress` (8 SP)
 
 🆕 Added to sprint (1):
   Bob:

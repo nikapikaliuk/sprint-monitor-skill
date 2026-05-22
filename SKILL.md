@@ -188,6 +188,18 @@ Each run delivers **one** output — for the single group whose config was inlin
 - **Routine mode never blocks.** Any branch that would require user input must have a graceful non-interactive fallback (treat-as-zero, skip-with-note, or hard-stop with a clear error). No silent hangs.
 - **One delivery per run.** Routine mode posts to Slack exactly once; local mode prints exactly once and optionally posts exactly once with `--post-slack`. Re-runs are full re-runs, not append-to-previous.
 
+## Before composing any output — re-read the format spec
+
+Immediately before rendering the delta message or canvas, re-read the
+relevant spec file fresh (`references/output/delta.md` or `canvas.md`),
+even if you already read it earlier in the session. Do not compose from
+memory or from a context-compaction summary. The spec is the source of
+truth and may have changed since session start.
+
+If a `<system-reminder>` tells you a spec file "was read before the last
+conversation was summarized," treat that as a signal to RE-read it now,
+not as permission to skip.
+
 ## Files in this skill
 
 - [SKILL.md](SKILL.md) — this file (entry point, modes, inline-config schema, sprint analysis flow).
