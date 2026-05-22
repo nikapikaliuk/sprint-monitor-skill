@@ -80,20 +80,26 @@ The skill auto-discovers PTO from each reportee's Google Calendar at the start o
 For each reportee in the inlined config, query their primary calendar via the Google Calendar MCP for events whose date range overlaps the current sprint window (`sprint.startDate` → `sprint.endDate`). The reportee's `email` field is the lookup key; if a reportee has a separate calendar address, the prompt config can carry an optional `gcal_email` field on their block and the skill uses that instead.
 
 **Event filter:**
-- All-day events only (timed meetings are not OOO).
+- **All-day events** — always counted (the canonical OOO shape).
+- **Timed events with a PTO-pattern title** — counted only when they meaningfully consume the workday. Compute the event's overlap with the **working window** (9:00–19:00 in the reportee's local timezone). Apply the **6-hour threshold**:
+  - **≥6 hours of working-window overlap** in a single day → count the day as OOO.
+  - **<6 hours** → ignore. A 2-hour doctor's appointment or a half-day errand isn't a real absence for capacity / availability purposes; treating it as OOO produces false "Eve is out today" lines that make the manager chase phantoms.
+  - **Multiple timed OOO events on the same day:** sum their overlaps with the working window, then apply the threshold to the sum. (Two 3-hour blocks → 6h total → counted. A 2h block + a 3h block → 5h → ignored.)
+  - **Multi-day timed events** (rare, e.g. a single calendar event spanning Mon 14:00 → Wed 11:00): split per local-calendar day, apply the threshold to each day independently. Days where the in-window overlap is <6h are dropped.
 - Title matches the case-insensitive PTO pattern: substring match on any of `vacation`, `pto`, `ooo`, `out of office`, `out of the office`, `sick`, `leave`, `holiday`, `away`. Override per group via an optional `pto_calendar_patterns` field on the inline config.
+- Working window: 9:00–19:00 local time. Override per group via an optional `working_window: { "start": "HH:MM", "end": "HH:MM" }` field on the inline config — out of scope for v1 in most cases; default works for typical knowledge-worker teams.
 - Status `accepted` or unspecified — skip events the reportee has `declined`.
 
 ### Mapping events → `pto[]` entries
 
-For each matching event, build an in-memory entry:
+For each matching event that passed the filter (all-day, or timed with ≥6h working-window overlap), build an in-memory entry:
 
 | Source field | → Target field |
 |---|---|
 | Title (matched keyword) | `type` — `sick` if title contains `sick`; otherwise `vacation`. |
-| `start.date` (event start, ISO date) | `start`. |
-| `end.date` minus 1 day (Google's `end.date` is exclusive) | `end`. |
-| Computed per [working-days math](#working-days-math) | `working_days`. |
+| `start.date` (all-day) **or** the local-calendar date of `start.dateTime` (timed event passing the threshold) | `start`. |
+| `end.date` minus 1 day (all-day; Google's `end.date` is exclusive) **or** the local-calendar date of `end.dateTime` (timed event) | `end`. |
+| Computed per [working-days math](#working-days-math); for timed events that pass the threshold, the day still counts as 1 working day | `working_days`. |
 | `"google_calendar:<event_id>"` | `source` — preserves the event id for traceability if a manager asks where an entry came from. |
 
 The `source` prefix `google_calendar:` is how the skill distinguishes synced entries from prompt-inlined ones during reconciliation in the same run.

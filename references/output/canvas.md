@@ -20,9 +20,19 @@ Slack canvas markdown is close to standard CommonMark but with quirks worth know
 - Status names inside backticks render as monospace — keeps them visually distinct from priority labels.
 - Do **not** include the title inside the content; pass it via the `title` argument when creating the canvas.
 
+### Ticket keys are ALWAYS markdown links
+
+**Mandatory rule, applies to every section.** Anywhere a Jira ticket key appears in the canvas — Sprint health snapshot, Capacity overview, Concerns, Risk deep-dive, Capacity breakdown tables, Removed-since-last-canvas, TL;DR, channel post — render it as `[KEY](<jira_base_url>/browse/<KEY>)`, never as bare text. The manager should always be one click away from any ticket they see referenced.
+
+Inside markdown tables, the same rule applies — `| [ZETA-2624](https://acme.atlassian.net/browse/ZETA-2624) | ...` works fine in Slack canvas tables.
+
+`jira_base_url` comes from the inline config. Same rule, same format as the delta — see [delta.md → Per-line formatting rules](delta.md#per-line-formatting-rules).
+
 ## Title
 
 `<traffic-light emoji> Sprint <N> — <DD Month>` — e.g. `🟡 Sprint 12 — 20 May`. The traffic-light emoji reflects overall sprint health (🟢/🟡/🔴) per the Step 7 rule in [analysis.md](../analysis.md). Date format is day-month, no year. Don't include "full report" or other qualifiers — the canvas is always the full thing.
+
+**Don't label sprint length.** Don't write "1-week sprint", "weekly sprint", "biweekly", etc. anywhere in the title, channel post, TL;DR, or canvas body. The skill's capacity math assumes a **10 working day / 2-week** sprint by default (see [pto.md](../pto.md) "Capacity math"), but the actual sprint length should be **read from Jira's `sprint.startDate → sprint.endDate`** for any duration-aware language. If you need to reference time remaining, say "ends Friday" or "3 working days left" — not "this 1-week sprint", which is almost always wrong (most teams here run 2-week sprints).
 
 ## Section list (in order)
 
@@ -269,6 +279,7 @@ Only the following signal categories surface here. Everything else lives in Spri
 - **Reopened.** `Done` → not-Done transition inside the sprint window.
 - **8 SP tickets** (the "should be split" anomaly). Always show. Lead with ✂️.
 - **Stuck in status >3 days** — but **exclude** `To Do`, `Development Ready`, `Merged`, and `Done`. So In Progress, In Review, Blocked, Verification, Verified are all eligible for the stuck signal.
+- **rSP modified mid-sprint** — only when the reportee has **≥2 tickets** with rSP changes in the sprint window (the bookkeeping-pattern threshold; see [analysis.md → rSP modified mid-sprint](../analysis.md#rsp-modified-mid-sprint)). One-off rSP edits don't surface here. Lead with 📒 (bookkeeping). Phrase as the per-ticket lines (e.g. `📒 [ALPHA-1234](…) — rSP \`4 → 0\` mid-sprint`). Also append a one-line suffix to that reportee's Capacity overview line: `· rSP modified on N tickets (burndown?)`.
 
 ### What NOT to include
 
@@ -386,19 +397,28 @@ The cutoff is judgmental — if rendering the table would push the canvas past ~
 
 **Canvas is currently the only rendered output** — both local-mode and routine-mode runs produce a canvas and post the link to `output_channel` (or DM the manager when `output_channel` is `null`).
 
-For the canvas + channel-post combo: after creating the canvas, send a one-line message to `output_channel` with `<@manager.slack_id>` leading the body, then the canvas URL, then a TL;DR (1–2 sentence summary of the most urgent thing).
+For the canvas + channel-post combo: after creating the canvas, send a short message to `output_channel`. Lead with the title naming the manager by first name (`for Alice`), include `<@<manager.slack_id>>` to actually ping, the canvas URL, and a 1–2 sentence TL;DR.
+
+**Slack mention rendering.** Same rule as the delta — `<@USERID>` must resolve to the manager's display name, not show the raw ID. Send with `mrkdwn: true` (the default for `slack_send_message`). Include the manager's first name as text in the title alongside the mention; if the mention ever fails to resolve in a notification preview or surface that doesn't render mrkdwn, the name is still visible.
 
 ## Example channel post accompanying a canvas
 
 ```
-<@U001AAAAAA1>
-🟡 *Sprint Monitor — Sprint 12 (20 May)* — full report
+🟡 *Sprint Monitor for Alice — Sprint 12 (20 May)* — full report <@U001AAAAAA1>
 <canvas URL>
 
-TL;DR: 1 High blocked (ZETA-2624 — 12d, no estimate); Grace's sprint ends in 2d with 6/7 not done. Canvas has the full breakdown.
+TL;DR: 1 High blocked ([ZETA-2624](https://acme.atlassian.net/browse/ZETA-2624) — 12d, no estimate). Canvas has the full breakdown.
 ```
 
-The `<@…>` tag at the top is the manager — without it the post sits in the channel without pinging anyone. The post is one short paragraph + the link. Manager clicks through to the canvas for everything else. (When falling back to DM-to-manager because `output_channel` is null, drop the `<@…>` tag — the DM target is already the audience.)
+The post is one short paragraph + the link. Manager clicks through to the canvas for everything else.
+
+**TL;DR rules:**
+- **One sentence, two max.** Surface the single most urgent item; don't summarize the sprint at large — that's what the canvas is for.
+- **Ticket keys are markdown links** — same rule as everywhere else in the skill. Render `[KEY](<jira_base_url>/browse/<KEY>)`. Bare keys are not acceptable; the manager needs one click to the ticket.
+- **Don't include sprint-end timing or general status framing.** Phrases like "sprint ends in 2d", "Most boards close Mon", "X tickets need review", "Y reviews pending" all belong inside the canvas (Capacity overview / Concerns / Risk deep-dive), not the TL;DR. The TL;DR is "if you read one thing, read this" — it's a pointer to a single concrete action, not a status summary.
+- **Drop the TL;DR entirely if nothing concrete stands out.** A green-traffic-light sprint with no high-priority blockers needs no TL;DR. The canvas link + manager mention is enough.
+
+(When falling back to DM-to-manager because `output_channel` is null, drop the `<@USERID>` mention — the DM target is already the audience.)
 
 ## Updating an existing canvas
 
