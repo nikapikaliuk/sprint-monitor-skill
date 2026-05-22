@@ -272,10 +272,10 @@ The total budget is 64 instead of 80, and the verdict reflects the scaled thresh
 
 All PTO and holiday surfaces live in the delta's **Today** block at the very top of the message — see [output/delta.md](output/delta.md) "Today block" for the full spec. Summary:
 
-**1. 🌴 Out today** — every reportee who is on PTO or sick *today*, sourced from the union of inlined `pto[]` arrays + the delta-time Google Calendar fetch. One collective line:
+**1. 🌴 Out today** — every reportee who is on PTO or sick *today*, sourced from the union of inlined `pto[]` arrays + the delta-time Google Calendar fetch. One collective line, no `Out today:` label — the leading emoji is the label. Per person, render `<Name> (<date1>–<date2>)` where the parens hold the **PTO window**, not the absence type. Single-day absence → single date; multi-day → en-dash range; cross-month range → spaces around the en-dash. If vacation and sick coexist, use per-person inline emoji.
 
 ```
-🌴 Out today: Bob (vacation), Eve (sick)
+🌴 Bob (May 20–24), 🤒 Eve (May 22)
 ```
 
 This catches both window-edge PTO ("Eve's vacation starts today") and ongoing mid-vacation PTO ("Bob is day 3 of 5"). Earlier spec revisions only surfaced edges (a "PTO updates" category for `start == today` or `end == today`); that missed people sitting in the middle of a vacation, which is the most common case. The "Out today" line replaces the edge-only category — it covers both, more legibly.

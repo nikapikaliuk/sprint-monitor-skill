@@ -36,7 +36,7 @@ If *every* category is empty (genuinely quiet day), fall back to the collapsed t
 
 ## Don't label sprint length
 
-The title is `<traffic-light> Sprint <N> — daily delta (<Day DD Month>)` — number + date, nothing about duration. Don't write "1-week sprint", "weekly delta", "biweekly", etc. anywhere in the title, body, or Today block. The skill's capacity math assumes a 2-week (10 working day) sprint; the actual length comes from Jira's `sprint.startDate → sprint.endDate` and should never be re-labelled in prose. If you need to reference time remaining, say "ends Friday" or "3 working days left" — not "this 1-week sprint" (almost always wrong; most teams here run 2-week sprints).
+The title is `<traffic-light> <SprintName> — <@managerID>` — traffic light, sprint name (number included, exactly as Jira labels it, e.g. `GX Sprint 185`), em-dash, manager mention. No "daily delta" label, no date in parens, no "for Alice" — minify aggressively, the channel + cadence already imply what this post is. Don't write "1-week sprint", "weekly delta", "biweekly", etc. anywhere in the title, body, or Today block. The skill's capacity math assumes a 2-week (10 working day) sprint; the actual length comes from Jira's `sprint.startDate → sprint.endDate` and should never be re-labelled in prose. If you need to reference time remaining, say "ends Friday" or "3 working days left" — not "this 1-week sprint" (almost always wrong; most teams here run 2-week sprints).
 
 ## Per-line formatting rules
 
@@ -54,15 +54,15 @@ These apply to every category. Render the message as Slack `mrkdwn` (the format 
 Before any delta category, render a small block of **today's situational context**: overall sprint health, then people-availability. These are the lines a manager wants to see *first* on opening the message — they reframe everything below ("oh, Eve is sick today, that explains the dip in Shipped"). All lines are conditional; skip any line that doesn't apply, and skip the whole block if every line is empty.
 
 Order inside the block:
-1. **🟡 Sprint health** — one-line traffic-light + headline numbers. Phrase as `🟡 Sprint health: 11 blocked (1 High), 2 unestimated in-flight, 2 days to sprint end (Grace).` Lifted from the old "still standing" section into the top because the manager wants overall posture before per-person specifics. Render only when the traffic light is non-green or any sprint is closing within 2 working days — on a steady 🟢 mid-sprint day, omit. (The traffic-light emoji on the title line already conveys the headline; the sprint-health line is for non-trivial situations.)
-2. **🌴 Out today** — anyone on PTO or sick *today*, regardless of when their absence started. One line: `🌴 Out today: <Name> (vacation), <Name> (sick)`. Emoji per person inline (`🌴` vacation, `🤒` sick) if you want; the default form is one collective line for scan-speed.
+1. **Sprint health** — one-line headline numbers, **no leading emoji and no `Sprint health:` label** — the title's traffic-light already carries the icon, and repeating it on the next line is doubled-status noise. Phrase as bare numbers, e.g. `11 blocked (1 High), 2 unestimated in-flight, 2 days to sprint end (Grace).` or `14 not done, sprint ends Sun May 24.` Render only when the traffic light is non-green or any sprint is closing within 2 working days — on a steady 🟢 mid-sprint day, omit.
+2. **🌴 Out today** — anyone on PTO or sick *today*, regardless of when their absence started. One line, leading `🌴` (or `🤒` if everyone listed is sick), then `<Name> (<date1>–<date2>)` per person, comma-separated. Drop the `Out today:` label — the leaf emoji is the label. The parens carry the **PTO window**, not the absence type: e.g. `(May 22–26)` for a multi-day vacation, `(May 22)` for a single day. Use en-dashes for ranges, single date for one-day absences, and `(May 22 – Jun 1)` (spaces around the en-dash) only when the range crosses a month. Example: `🌴 Anna (May 22–26), Bob (May 22)`. If vacation and sick coexist on the same day, use per-person inline emoji: `🌴 Anna (May 22–26), 🤒 Bob (May 22)` — the leading emoji becomes whichever applies to the first listed person.
 3. **🌴 PTO starts today / ends today** — window-edge transitions, the same case the old category 6 covered. Phrase as `🌴 Bob — vacation starts today (May 22–26, 3d)` or `🤒 Eve — sick today (1d)`. One line per person. Skip if already covered by "Out today" — no duplication.
 4. **🇵🇱 Country holiday today** — one line per country (the group's `country` first, then each `info_countries` entry). Phrase as `🇵🇱 PL holiday today: Labour Day (May 1)`.
 5. **🇮🇱 Country holiday tomorrow** — heads-up line, especially for IL erev half-days. Phrase as `🇮🇱 IL holiday tomorrow: Shavuot (Fri 22 May)`.
 
 ```
-🟡 Sprint health: 11 blocked (1 High), 2 unestimated in-flight, 2 days to sprint end (Grace).
-🌴 Out today: Bob (vacation), Eve (sick)
+11 blocked (1 High), 2 unestimated in-flight, 2 days to sprint end (Grace).
+🌴 Bob (May 20–24), 🤒 Eve (May 22)
 🇮🇱 IL holiday today: Shavuot (Fri 22 May)
 ```
 
@@ -123,12 +123,18 @@ Surface tickets that **just crossed** a threshold the canvas would also flag —
 - **Due date now ≤2d.** Ticket has `duedate >= today AND duedate <= today + 2 days AND duedate > today - 1 days` from yesterday's reference frame. In practice: a ticket whose `duedate` is today, tomorrow, or the day after, and was *not* in that window yesterday. Approximate by: `duedate <= today + 2d AND duedate >= today + 2d` (i.e., the duedate is exactly 2 days out — that's the day the threshold first fires). Acceptable to also include `duedate = today + 1d` if the spec is being strict about same-day clarity.
 - **Sprint ends ≤2d with these tickets still not done.** Same logic against `sprint.endDate` rather than `duedate`. **Fri-end ≈ Mon-end of the same close-out week** — see [../analysis.md](../analysis.md) "Practical Jira-MCP tips → Time math". Don't fire this on Friday for a Fri-ending sprint when you wouldn't also fire it on the prior Thursday for a Monday-ending sprint — the weekend collapses the gap and singling out Friday-ending sprints is noise.
   - **Priority filter:** within this sub-block, render **Critical / Highest / P0 / Blocker / High / P1 / Medium / P2 only**. Drop Low, Lowest, Lowest-equivalent, and unprioritized tickets — a sprint closing with un-prioritized low work isn't urgent enough for the delta's top-attention block (it'll still appear in the canvas's risk breakdown). The rationale: this block is meant to drive end-of-sprint triage, and low-priority unfinished work is generally fine to push to the next sprint.
-  - **Sort descending by priority** within the block: Critical → High → Medium. Don't break by status or owner — the priority signal is the whole point.
+  - **Owner grouping:**
+    - **One owner** in the not-done set → flat numbered list under the sprint header, sorted descending by priority (Critical → High → Medium). Each ticket line is prefixed with one tab character.
+    - **Multiple owners** → break down by reportee: name on its own line, then a numbered list of that person's tickets nested under. **Use literal tab characters for indentation**, not spaces — one tab before the reportee name, two tabs before each numbered ticket line. Reportees ordered by **most-items-first**, ties broken alphabetically. Within each person, sort tickets descending by priority then descending by SP.
   - **One ticket per line.** Never comma-group multiple keys on a line, even when several tickets share the same owner/status — this block needs to be scannable item-by-item under deadline pressure.
+  - **Drop the per-ticket owner parens** in the multi-owner form — the reportee sub-heading already names the owner. Owner parens stay only in the single-owner-flat-list form, and even there they're redundant; prefer omitting.
 
 These can each be computed without a snapshot — they're all functions of the current changelog and current dates.
 
-The Newly-stuck and Due-now sub-blocks follow the **group-by-reportee** format (per [Per-line formatting rules](#per-line-formatting-rules)). The **Sprint-ends-≤2d** sub-block follows a **per-sprint** header instead — the heading names the sprint (and its closing owner) and tickets are listed flat below it, since the manager's question here is "what's outstanding on Sprint X" not "what's each person doing":
+The Newly-stuck and Due-now sub-blocks follow the **group-by-reportee** format (per [Per-line formatting rules](#per-line-formatting-rules)). The **Sprint-ends-≤2d** sub-block uses a **per-sprint** header (sprint name + end date + count), with the body shape depending on how many owners are in the not-done set:
+
+- **Single owner** → flat numbered list under the sprint header. The header is enough; no per-person sub-grouping.
+- **Multiple owners** → break down by reportee, ordered most-items-first, with a numbered list per person nested underneath. Same indentation convention as all other delta categories (`  Name:` / `    1. ...`).
 
 ```
 ⚠️ Newly stuck >3d:
@@ -139,11 +145,32 @@ The Newly-stuck and Due-now sub-blocks follow the **group-by-reportee** format (
   Bob:
     1. [ALPHA-1009](https://acme.atlassian.net/browse/ALPHA-1009) :priority-high: — due 23 May
 
-⚠️ EPSILON Sprint 12 ends today (Grace) — 3 not done:
-  1. [EPSILON-3792](https://acme.atlassian.net/browse/EPSILON-3792) :priority-high: — `In Review`
-  2. [EPSILON-3848](https://acme.atlassian.net/browse/EPSILON-3848) :priority-high: — `In Review`
-  3. [EPSILON-3837](https://acme.atlassian.net/browse/EPSILON-3837) :priority-medium: — `In Progress` (8 SP)
+⚠️ GX Sprint 185 ends Sun May 24 — 14 not done:
+	Olga:
+		1. [GX-3707](https://acme.atlassian.net/browse/GX-3707) :priority-medium: — `Development Ready` (4 SP)
+		2. [GX-3625](https://acme.atlassian.net/browse/GX-3625) :priority-medium: — `Development Ready` (4 SP)
+		3. [GX-3554](https://acme.atlassian.net/browse/GX-3554) :priority-medium: — `In Progress` (4 SP)
+		4. [GX-3317](https://acme.atlassian.net/browse/GX-3317) :priority-medium: — `Merged` (4 SP)
+		5. [GX-3546](https://acme.atlassian.net/browse/GX-3546) :priority-medium: — `In Review` (2 SP)
+		6. [GX-3547](https://acme.atlassian.net/browse/GX-3547) :priority-medium: — `Backlog` (2 SP)
+	Illia:
+		1. [GX-3557](https://acme.atlassian.net/browse/GX-3557) :priority-medium: — `Merged` (8 SP)
+		2. [GX-3556](https://acme.atlassian.net/browse/GX-3556) :priority-medium: — `In Review` (8 SP)
+		3. [GX-3772](https://acme.atlassian.net/browse/GX-3772) :priority-medium: — `To Do` (4 SP)
+		4. [GX-3577](https://acme.atlassian.net/browse/GX-3577) :priority-medium: — `Merged` (2 SP)
+		5. [GX-3771](https://acme.atlassian.net/browse/GX-3771) :priority-medium: — `Merged` (1 SP)
+	Eugene:
+		1. [GX-3696](https://acme.atlassian.net/browse/GX-3696) :priority-medium: — `Development Ready` (8 SP)
+		2. [GX-3700](https://acme.atlassian.net/browse/GX-3700) :priority-medium: — `Backlog` (4 SP)
+		3. [GX-3695](https://acme.atlassian.net/browse/GX-3695) :priority-medium: — `In Progress` (4 SP)
+
+⚠️ EPSILON Sprint 12 ends today — 3 not done:
+	1. [EPSILON-3792](https://acme.atlassian.net/browse/EPSILON-3792) :priority-high: — `In Review` (3 SP)
+	2. [EPSILON-3848](https://acme.atlassian.net/browse/EPSILON-3848) :priority-high: — `In Review` (5 SP)
+	3. [EPSILON-3837](https://acme.atlassian.net/browse/EPSILON-3837) :priority-medium: — `In Progress` (8 SP)
 ```
+
+(First example: 3 owners → grouped breakdown. Second example: 1 owner → flat list. Note the multi-owner header drops the `(Closing-Owner)` parens — with per-person sub-headings below, listing contributors in the header would duplicate that information.)
 
 ### 4. 🆕 Late sprint additions
 
@@ -257,10 +284,10 @@ A single persistent block: every ticket that's been **stuck in an in-flight or b
 ## Format — full skeleton
 
 ```
-🔴 Sprint 12 — daily delta for Alice (Fri 22 May) <@U001AAAAAA1>
+🔴 GX Sprint 12 — <@U001AAAAAA1>
 
-🟡 Sprint health: 11 blocked (1 High), 2 unestimated in-flight, 2 days to sprint end (Grace).
-🌴 Out today: Bob (vacation), Eve (sick)
+11 blocked (1 High), 2 unestimated in-flight, 2 days to sprint end (Grace).
+🌴 Bob (May 20–24), 🤒 Eve (May 22)
 🇮🇱 IL holiday today: Shavuot (Fri 22 May)
 
 🚧 New blockers (2):
@@ -277,9 +304,9 @@ A single persistent block: every ticket that's been **stuck in an in-flight or b
   Dave:
     1. [ETA-5404](https://acme.atlassian.net/browse/ETA-5404) :priority-medium: — `In Review` 3d
 
-⚠️ EPSILON Sprint 12 ends today (Grace) — 3 not done:
-  1. [EPSILON-3792](https://acme.atlassian.net/browse/EPSILON-3792) :priority-high: — `In Review`
-  2. [EPSILON-3848](https://acme.atlassian.net/browse/EPSILON-3848) :priority-high: — `In Review`
+⚠️ EPSILON Sprint 12 ends today — 3 not done:
+  1. [EPSILON-3792](https://acme.atlassian.net/browse/EPSILON-3792) :priority-high: — `In Review` (3 SP)
+  2. [EPSILON-3848](https://acme.atlassian.net/browse/EPSILON-3848) :priority-high: — `In Review` (5 SP)
   3. [EPSILON-3837](https://acme.atlassian.net/browse/EPSILON-3837) :priority-medium: — `In Progress` (8 SP)
 
 🆕 Added to sprint (1):
@@ -311,14 +338,14 @@ This is the *maximum* shape. A real run will usually have several of these secti
 2. **Delta categories**, attention-first: blockers, reopens, threshold crossings, sprint additions/removals, status moves, Shipped.
 3. **Stuck** — long-tail forgotten work (>14d in in-flight/blocked), at the bottom.
 
-No more **📄 Full report** link line. The daily delta is meant to be self-contained — the canvas is its own surface posted twice a week, and the manager finds it independently in Slack. The old "Since yesterday. N days left in sprint" subline is also gone; the title carries the date and the sprint-health line (when present) carries the days-left.
+No more **📄 Full report** link line. The daily delta is meant to be self-contained — the canvas is its own surface posted twice a week, and the manager finds it independently in Slack. The old "Since yesterday. N days left in sprint" subline is also gone; the sprint-health line (when present) carries the days-left, and the post timestamp is the date.
 
 ## Quiet days
 
 If every category is empty (no new blockers, no reopens, no shipped tickets, no status moves, no threshold crossings, no PTO updates, no late additions/removals) — still ship the message, but collapse to 2 lines:
 
 ```
-🟢 Sprint 12 — daily delta (Wed 22 May)
+🟢 GX Sprint 12 — <@U001AAAAAA1>
 No material changes in the last 24h.
 ```
 
@@ -341,22 +368,22 @@ Post to `output_channel` with the manager `<@…>`-mentioned on the first line. 
 
 **Slack mention rendering.** The `<@USERID>` syntax must resolve to the manager's display name (`@Alice Johnson`), not show the raw ID. Two requirements:
 - **Send the message with `mrkdwn` parsing enabled** — pass `mrkdwn: true` (the default) to `slack_send_message`. Without it, Slack shows the literal `<@U001AAAAAA1>` text.
-- **Include the manager's display name in the body text too** (the human-readable form from `manager.name`). This is a belt-and-suspenders fallback: if the mention syntax ever fails to resolve in a Slack surface (e.g. a notification preview, an email digest), the manager's name is still visible. Use the first name only in the title — `for Alice` not `for Alice Johnson` — to keep the line scannable. Full name lives in the canvas itself.
+- The `<@USERID>` mention is the **only** name reference on the title line — no `for Alice` prefix, no `(Alice Johnson)` suffix. If a Slack surface ever fails to resolve the mention (notification preview, email digest), the raw `<@U…>` shows; that's acceptable since the channel + cadence already imply ownership. The manager's full display name lives in the canvas.
 
-On a channel post the leading line is the daily-delta title naming the manager, with the mention appended for the ping:
+On a channel post the leading line is the minified title: traffic-light, sprint name, em-dash, manager mention. Nothing else:
 
 ```
-🔴 Sprint 12 — daily delta for Alice (Fri 22 May) <@U001AAAAAA1>
+🔴 GX Sprint 12 — <@U001AAAAAA1>
 
-🟡 Sprint health: 11 blocked (1 High), 2 days to sprint end (Grace).
-🌴 Out today: Eve (sick)
+11 blocked (1 High), 2 days to sprint end (Grace).
+🤒 Eve (May 22)
 🇮🇱 IL holiday today: Shavuot (Fri 22 May)
 
 🚧 New blockers (1):
   ...
 ```
 
-Putting the name in the title text (`for Alice`) makes the Slack notification preview legible — managers see "Sprint 12 — daily delta for Alice" without depending on mention resolution. The `<@USERID>` at the end is what actually pings.
+The `<@USERID>` both pings and identifies — no second name reference in body text. Keeping the title to two information units (sprint, manager) avoids the doubled-status icon and "daily delta for X (date)" verbosity managers were skipping past.
 
 The **Today** block sits between the title and the first delta category — sprint health + anything urgent about people-availability shows immediately under the title.
 
