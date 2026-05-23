@@ -131,27 +131,27 @@ The Due-now sub-block follows the same per-reportee layered shape as the rest of
 
 ━━━━━━━━━━━━
 
-⚠️  *GX Sprint 185 ends Sun May 24*  ·  14 not done
+⚠️  *ZETA Sprint 185 ends Sun May 24*  ·  14 not done
 
    *Olga*
-        1. [GX-3707](https://acme.atlassian.net/browse/GX-3707) :priority-medium: — `Development Ready` (4 SP)
-        2. [GX-3625](https://acme.atlassian.net/browse/GX-3625) :priority-medium: — `Development Ready` (4 SP)
-        3. [GX-3554](https://acme.atlassian.net/browse/GX-3554) :priority-medium: — `In Progress` (4 SP)
-        4. [GX-3317](https://acme.atlassian.net/browse/GX-3317) :priority-medium: — `Merged` (4 SP)
-        5. [GX-3546](https://acme.atlassian.net/browse/GX-3546) :priority-medium: — `In Review` (2 SP)
-        6. [GX-3547](https://acme.atlassian.net/browse/GX-3547) :priority-medium: — `Backlog` (2 SP)
+        1. [ZETA-3707](https://acme.atlassian.net/browse/ZETA-3707) :priority-medium: — `Development Ready` (4 SP)
+        2. [ZETA-3625](https://acme.atlassian.net/browse/ZETA-3625) :priority-medium: — `Development Ready` (4 SP)
+        3. [ZETA-3554](https://acme.atlassian.net/browse/ZETA-3554) :priority-medium: — `In Progress` (4 SP)
+        4. [ZETA-3317](https://acme.atlassian.net/browse/ZETA-3317) :priority-medium: — `Merged` (4 SP)
+        5. [ZETA-3546](https://acme.atlassian.net/browse/ZETA-3546) :priority-medium: — `In Review` (2 SP)
+        6. [ZETA-3547](https://acme.atlassian.net/browse/ZETA-3547) :priority-medium: — `Backlog` (2 SP)
 
    *Illia*
-        1. [GX-3557](https://acme.atlassian.net/browse/GX-3557) :priority-medium: — `Merged` (8 SP)
-        2. [GX-3556](https://acme.atlassian.net/browse/GX-3556) :priority-medium: — `In Review` (8 SP)
-        3. [GX-3772](https://acme.atlassian.net/browse/GX-3772) :priority-medium: — `To Do` (4 SP)
-        4. [GX-3577](https://acme.atlassian.net/browse/GX-3577) :priority-medium: — `Merged` (2 SP)
-        5. [GX-3771](https://acme.atlassian.net/browse/GX-3771) :priority-medium: — `Merged` (1 SP)
+        1. [ZETA-3557](https://acme.atlassian.net/browse/ZETA-3557) :priority-medium: — `Merged` (8 SP)
+        2. [ZETA-3556](https://acme.atlassian.net/browse/ZETA-3556) :priority-medium: — `In Review` (8 SP)
+        3. [ZETA-3772](https://acme.atlassian.net/browse/ZETA-3772) :priority-medium: — `To Do` (4 SP)
+        4. [ZETA-3577](https://acme.atlassian.net/browse/ZETA-3577) :priority-medium: — `Merged` (2 SP)
+        5. [ZETA-3771](https://acme.atlassian.net/browse/ZETA-3771) :priority-medium: — `Merged` (1 SP)
 
    *Eugene*
-        1. [GX-3696](https://acme.atlassian.net/browse/GX-3696) :priority-medium: — `Development Ready` (8 SP)
-        2. [GX-3700](https://acme.atlassian.net/browse/GX-3700) :priority-medium: — `Backlog` (4 SP)
-        3. [GX-3695](https://acme.atlassian.net/browse/GX-3695) :priority-medium: — `In Progress` (4 SP)
+        1. [ZETA-3696](https://acme.atlassian.net/browse/ZETA-3696) :priority-medium: — `Development Ready` (8 SP)
+        2. [ZETA-3700](https://acme.atlassian.net/browse/ZETA-3700) :priority-medium: — `Backlog` (4 SP)
+        3. [ZETA-3695](https://acme.atlassian.net/browse/ZETA-3695) :priority-medium: — `In Progress` (4 SP)
 ```
 
 ### 4. 🆕 Late sprint additions
@@ -272,7 +272,7 @@ A single persistent block: every ticket that's been **stuck in an in-flight or b
 ## Format — full skeleton
 
 ```
-🔴  *GX Sprint 12*  —  <@U001AAAAAA1>
+🔴  *ZETA Sprint 12*  —  <@U001AAAAAA1>
 
 *11 blocked* (1 :priority-high:)  ·  2 unestimated in-flight  ·  2 days to sprint end (Grace)
 
@@ -348,7 +348,7 @@ This is the *maximum* shape. A real run will usually have several of these secti
 If every category is empty (no new blockers, no reopens, no shipped tickets, no status moves, no threshold crossings, no late additions/removals) — still ship the message, but collapse to 2 lines:
 
 ```
-🟢  *GX Sprint 12*  —  <@U001AAAAAA1>
+🟢  *ZETA Sprint 12*  —  <@U001AAAAAA1>
 No material changes in the last 24h.
 ```
 
@@ -377,7 +377,7 @@ Post to `output_channel` with the manager `<@…>`-mentioned on the first line. 
 On a channel post the leading line is the minified title: traffic-light, sprint name, em-dash, manager mention. Nothing else:
 
 ```
-🔴  *GX Sprint 12*  —  <@U001AAAAAA1>
+🔴  *ZETA Sprint 12*  —  <@U001AAAAAA1>
 
 *11 blocked* (1 :priority-high:)  ·  2 days to sprint end (Grace)
 

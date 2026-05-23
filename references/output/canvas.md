@@ -4,7 +4,7 @@ The richest output surface — a Slack Canvas document holding the full sprint r
 
 When to use:
 - Local-mode runs where the manager asks for a "full report", "deep dive", "long review", or explicitly says "canvas".
-- Routine mode if `output_channel` is set to a canvas-capable destination (not v1 default; v1 routine still uses Slack messages).
+- Routine mode when `output_channel` is set to a canvas-capable destination.
 
 Delivery: create the canvas via `slack_create_canvas`, then post the link to the group's `output_channel` (default) with the manager `<@…>`-tagged. DM-to-manager is the fallback when `output_channel` is `null`. The channel post / DM is a short message with the link — the canvas itself carries the content.
 
@@ -20,17 +20,20 @@ Slack canvas markdown is close to standard CommonMark but with quirks worth know
 - Status names inside backticks render as monospace — keeps them visually distinct from priority labels.
 - Do **not** include the title inside the content; pass it via the `title` argument when creating the canvas.
 
-### Ticket keys are ALWAYS markdown links
+## Shared styling rules
 
-**Mandatory rule, applies to every section.** Anywhere a Jira ticket key appears in the canvas — Sprint health snapshot, Capacity overview, Concerns, Risk deep-dive, Capacity breakdown tables, Removed-since-last-canvas, TL;DR, channel post — render it as `[KEY](<jira_base_url>/browse/<KEY>)`, never as bare text. The manager should always be one click away from any ticket they see referenced.
+These mirror the [delta's per-line formatting rules](delta.md#per-line-formatting-rules) — apply them in the canvas wherever the same data type appears:
 
-Inside markdown tables, the same rule applies — `| [ZETA-2624](https://acme.atlassian.net/browse/ZETA-2624) | ...` works fine in Slack canvas tables.
-
-`jira_base_url` comes from the inline config. Same rule, same format as the delta — see [delta.md → Per-line formatting rules](delta.md#per-line-formatting-rules).
+- **Ticket keys are always markdown links** — `[KEY](<jira_base_url>/browse/<KEY>)`. Never bare text. Applies in every section, including inside markdown tables (`| [ZETA-2624](…) | ...`) and the channel-post TL;DR. The manager should always be one click away from any ticket they see referenced.
+- **Status names** go in backticks, in human form (`` `In Review` ``, `` `Ready for Verification` ``). Normalize `IN_REVIEW` → `In Review` before rendering.
+- **Priorities are Slack emoji** where the workspace supports them — `:priority-critical:`, `:priority-high:`, `:priority-medium:`, `:priority-low:`. Position: immediately after the ticket link. Fall back to the bare priority word if the emoji isn't available. Never bracketed text like `(High)`.
+- **People names are bold.** Canvas uses **full names** (`**Dave Wilson**`); the delta uses first names. Same bold rule, different name length — chosen deliberately because the canvas is a longer browsable document and the full name removes ambiguity.
+- **Counts use a `·` separator**, not parens — `**Dave Wilson**  ·  3 removed`, `## 6. Risk deep-dive  ·  top 5`. Same pattern as the delta's `🚧  *New blockers*  ·  2` category subtitle. Two spaces around the `·`.
+- **Section dividers** — between top-level `##` sections, insert a short `━━━━━━━━━━━━` (~12 chars) line, the same divider used in the delta. The `##` heading already separates, but the rule adds visual rhythm and matches the delta's section cadence.
 
 ## Title
 
-`<traffic-light emoji> Sprint <N> — <DD Month>` — e.g. `🟡 Sprint 12 — 20 May`. The traffic-light emoji reflects overall sprint health (🟢/🟡/🔴) per the Step 7 rule in [analysis.md](../analysis.md). Date format is day-month, no year. Don't include "full report" or other qualifiers — the canvas is always the full thing.
+`<traffic-light emoji>  **Sprint <N>**  —  <DD Month>` — e.g. `🟡  **Sprint 12**  —  20 May`. Sprint name is bold (same rule as the delta's title). The traffic-light emoji reflects overall sprint health (🟢/🟡/🔴) per the Step 7 rule in [analysis.md](../analysis.md). Date format is day-month, no year. Don't include "full report" or other qualifiers — the canvas is always the full thing.
 
 **Don't label sprint length.** Don't write "1-week sprint", "weekly sprint", "biweekly", etc. anywhere in the title, channel post, TL;DR, or canvas body. The skill's capacity math assumes a **10 working day / 2-week** sprint by default (see [pto.md](../pto.md) "Capacity math"), but the actual sprint length should be **read from Jira's `sprint.startDate → sprint.endDate`** for any duration-aware language. If you need to reference time remaining, say "ends Friday" or "3 working days left" — not "this 1-week sprint", which is almost always wrong (most teams here run 2-week sprints).
 
@@ -45,24 +48,24 @@ Inside markdown tables, the same rule applies — `| [ZETA-2624](https://acme.at
 6. **Risk deep-dive** (top 5 risk tickets)
 7. **Capacity breakdown** (detailed per-ticket tables)
 
-No "Active right now" section. No "What I'd ask in 1:1s" section. No "Generated for X" preamble. No "Notes on this run" trailer. Keep the canvas tight — the manager skims top-to-bottom and the most signal-dense parts are first.
+Keep the canvas tight — the manager skims top-to-bottom and the most signal-dense parts are first. No preamble, no trailer, no sections beyond the seven listed.
 
 ## 1. Sprint health snapshot
 
-Three lines (no leading bullet marker), each starting with a category emoji + bold label + count:
+Three lines (no leading bullet marker), each starting with a category emoji + bold label + `·` separator + count, matching the delta's category-subtitle styling:
 
 ```
-🚧 **Blocked: <N> tickets** — <K> High (<links>), <M> Medium, <L> Low.
-❓ **Unestimated: <N> tickets** — <K> in-flight `Blocked` (<links>).
-✂️ **Need to be splitted: <N> tickets** — <link1> (<owner>, `<status>`) and <link2> (<owner>, `<status>`, half-done).
+🚧 **Blocked**  ·  <N> tickets — <K> :priority-high: (<links>), <M> :priority-medium:, <L> :priority-low:.
+❓ **Unestimated**  ·  <N> tickets — <K> in-flight `Blocked` (<links>).
+✂️ **Need to be splitted**  ·  <N> tickets — <link1> (<owner>, `<status>`) and <link2> (<owner>, `<status>`, half-done).
 ```
 
 Rules:
-- **Blocked line.** Always lead with High-priority blocked tickets by ticket key + link. Drop the distribution (per-reportee counts) — the Capacity overview already shows who has load issues. If 0 High blocked, just say "Blocked: N tickets — all Medium/Low" or similar.
+- **Blocked line.** Always lead with High-priority blocked tickets by ticket key + link. Drop the distribution (per-reportee counts) — the Capacity overview already shows who has load issues. If 0 :priority-high: blocked, just say `**Blocked**  ·  N tickets — all Medium/Low` or similar.
 - **Unestimated line.** Surface only the **acute** subset: in-flight unestimated tickets (in any of the five in-flight statuses + Blocked). These can't be capacity-sized, which is why they matter. Don't dump the long list of pre-work unestimated (Backlog/To Do) — that's refinement debt, not actionable here.
 - **"Need to be splitted" line.** All 8-SP tickets, regardless of status. The label uses "splitted" (manager preference; do not "correct" to "split"). For each: ticket link, owner, current status, brief context if half-done.
 
-If a category has 0 tickets, drop the entire line (don't write "Blocked: 0 tickets").
+If a category has 0 tickets, drop the entire line.
 
 ## 1b. Removed since last canvas *(conditional)*
 
@@ -73,7 +76,7 @@ Renders only when **both** conditions hold:
 
 Otherwise the entire section is omitted — no "Nothing removed" placeholder.
 
-The window bound — `prior_canvas_posted_at` — is the `ts` of the Slack message that linked the prior canvas (or, equivalently, the canvas's `created`/`updated` timestamp). It replaces the file-based `last_canvas.run_at` from earlier spec revisions.
+The window bound — `prior_canvas_posted_at` — is the `ts` of the Slack message that linked the prior canvas (or, equivalently, the canvas's `created`/`updated` timestamp).
 
 ### Detection
 
@@ -96,11 +99,11 @@ Section heading + a nested list, grouped by reportee, sorted reportees by count 
 ```
 ## Removed since last canvas
 
-- **Dave Wilson** (3 removed)
+- **Dave Wilson**  ·  3 removed
   - [ETA-5404](https://acme.atlassian.net/browse/ETA-5404) (4 SP, was `Blocked`) — pushed to ETA Sprint 13
   - [ETA-5366](https://acme.atlassian.net/browse/ETA-5366) (2 SP, was `Blocked`) — pushed to ETA Sprint 13
   - [ETA-5362](https://acme.atlassian.net/browse/ETA-5362) (2 SP, was `Blocked`) — back to backlog
-- **Bob Smith** (1 removed)
+- **Bob Smith**  ·  1 removed
   - [ALPHA-1010](https://acme.atlassian.net/browse/ALPHA-1010) (4 SP, was `Backlog`) — pushed to ALPHA Sprint 13
 ```
 
@@ -111,7 +114,7 @@ Per-line shape: `[KEY] (<SP> SP, was <status>) — <destination>`.
 - "back to backlog" — if the ticket has no active sprint membership now.
 - "moved to <Sprint Name>" — if the ticket landed in a sprint that closed since (rare, but if Jira shows it).
 
-If a reportee has 6+ removals, collapse to a one-line summary instead of listing every key: `- **Bob** (8 removed) — see Jira; cluster pattern suggests sprint over-loaded at planning.`
+If a reportee has 6+ removals, collapse to a one-line summary instead of listing every key: `- **Bob Smith**  ·  8 removed — see Jira; cluster pattern suggests sprint over-loaded at planning.`
 
 If only one reportee has removals, drop the per-reportee grouping and just list the tickets flat.
 
@@ -132,10 +135,10 @@ The Capacity overview line has two shapes depending on whether a prior canvas ex
 **Shape A — first canvas of the sprint (no prior to compare against):** absolute percentage only.
 
 ```
-<icon> **<Full Name>** · <sprints> · <Verdict> (<%>)
+<icon> **<Full Name>** · <sprints> · <Verdict> · <%>
 ```
 
-Example: *🔴 **Dave Wilson** · ETA · Overbooked (263%)*.
+Example: *🔴 **Dave Wilson** · ETA · Overbooked · 263%*.
 
 Use Shape A when:
 - No prior canvas was found for this manager in `output_channel` (see "Sourcing the prior percentage" below), OR
@@ -150,7 +153,7 @@ Use Shape A when:
 
 Example: *🔴 **Dave Wilson** · ETA · 263% → 115% · 3 tickets moved out of sprint; SP changed on 2 tickets*.
 
-Use Shape B when a prior canvas for the same sprint exists and is readable. **If the percentage is unchanged**, drop the diff and reason entirely — collapse back to Shape A (`<Verdict> (<%>)`). No `(no change)` filler.
+Use Shape B when a prior canvas for the same sprint exists and is readable. **If the percentage is unchanged**, drop the diff and reason entirely — collapse back to Shape A (`<Verdict> · <%>`). No `(no change)` filler.
 
 The verdict label (Overbooked / Borderline / Normal / Underworked) is implied by the icon and dropped from the line text under Shape B — the diff carries the load story. If a manager wants the verdict label spelled out, it's still in the Capacity breakdown section.
 
@@ -164,7 +167,7 @@ The skill needs to know what the previous canvas reported. There's no file-based
 4. **Capture the message's `ts`** (the Slack message timestamp) — this is `prior_canvas_posted_at`, used as the lower bound on the reason-derivation JQLs (see "Deriving the reason text" below) and on the Section 1b "Removed since last canvas" detection JQL.
 5. **Capture the active-sprint context** the prior canvas covered. The simplest source is the prior canvas's Capacity overview lines, which name each reportee's sprint(s) (e.g. "ALPHA + BETA"). If a current reportee's active sprint set has no overlap with what the prior canvas showed, that reportee gets Shape A (sprint rolled over for them) — the percentage diff would be meaningless.
 
-The reportee-name → percentage map (plus `prior_canvas_posted_at` and the canvas id for the in-place update) is everything the skill extracts. Don't try to reconstruct prior hour totals or bucket counts from canvas text — they aren't needed for the diff, and the text isn't guaranteed to be parseable past v1.
+The reportee-name → percentage map (plus `prior_canvas_posted_at` and the canvas id for the in-place update) is everything the skill extracts. Don't try to reconstruct prior hour totals or bucket counts from canvas text — they aren't needed for the diff, and the rendered text isn't guaranteed to be parseable.
 
 This is intentionally a lightweight "two canvases ago doesn't matter" memory — the diff is always to the most recent canvas, never to a baseline. If the lookup fails for any reason, fall back to Shape A silently and create a fresh canvas.
 
@@ -213,8 +216,8 @@ If a reportee's sprint ends very soon (≤2 working days) and they're not Normal
 **PTO suffix** — if a reportee has PTO, sick leave, or public holidays inside the current sprint window, append a PTO fragment to their line:
 
 ```
-🟢 **Bob Smith** · ALPHA + BETA · Normal (94%) · 🌴 PTO May 22–26 (3d)
-🤒 **Eve Martinez** · DELTA + ZETA · Underworked (40%) · sick today
+🟢 **Bob Smith** · ALPHA + BETA · Normal · 94% · 🌴 PTO May 22–26 (3d)
+🤒 **Eve Martinez** · DELTA + ZETA · Underworked · 40% · sick today
 ```
 
 Emoji: 🌴 vacation, 🤒 sick. Comma-separate multiple entries. Only show entries with at least one day inside the sprint window. The verdict percentage is computed against the **scaled** `capacity_hours` (see [../pto.md](../pto.md) "Capacity math"). See [../pto.md](../pto.md) "Display" for full rules.
@@ -246,11 +249,12 @@ Format:
 ## Group holidays this sprint
 
 🇵🇱 Poland — May 24 (Pentecost Sunday, weekend), Jun 4 (Corpus Christi, Thu)
+
 🇮🇱 Israel — May 22 (Shavuot, Fri)
 ```
 
 Rules:
-- One line per country. The group's `country` line goes **first**, then each `info_countries` entry in array order.
+- **One country per line**, separated by a blank line — gives each country its own visual block, otherwise the lines mash together when several holidays are listed per country. The group's `country` line goes **first**, then each `info_countries` entry in array order.
 - List every holiday from that country's list in [../holidays.md](../holidays.md) whose date is inside the sprint window — past, today, and upcoming. Per holiday: `<MMM DD> (<name>, <weekday>)`. Comma-separate multiple.
 - This is **info only**. The capacity math already applied the `country` reductions silently in Step 6 of [../analysis.md](../analysis.md) — this section doesn't restate the math.
 - `info_countries` holidays do **not** affect capacity for anyone in this group — they're for cross-team awareness (e.g. the Polish team knowing Israeli colleagues are off).
@@ -258,7 +262,7 @@ Rules:
 
 ## 5. Concerns
 
-Renamed from "Concerns per reportee" — kept short. Format is a nested bulleted list:
+Per-reportee list of qualifying concerns. Format is a nested bulleted list:
 
 ```
 - **<Reportee Name>**
@@ -284,7 +288,7 @@ Only the following signal categories surface here. Everything else lives in Spri
 ### What NOT to include
 
 - **"Just Blocked" tickets** without any other signal. The Sprint health snapshot already lists the blocked count and surfaces the High-priority one. Don't duplicate them here. A blocked ticket only surfaces here if it *also* hits one of the categories above (e.g. stuck in Blocked >3d — which it usually does if it's been blocked a while).
-- Scope creep, comment-velocity, PR signals, etc. — not in this section in v1 (move to risk deep-dive if they apply to a top-5 risk ticket).
+- Scope creep, comment-velocity, PR signals, etc. — move to risk deep-dive if they apply to a top-5 risk ticket.
 
 ### Within-reportee ordering
 
@@ -300,11 +304,11 @@ Sort concerns by urgency:
 - One concern per line. No multi-line bullets.
 - Lead with the ticket key as a markdown link.
 - Use compact phrasing: `[ALPHA-1009] due 25 May (4d), stuck in In Progress 5.5d`. Status names in backticks.
-- High priority: surface `(High)` inline. Don't surface Medium/Low — they're the default.
+- High priority: surface the `:priority-high:` (or `:priority-critical:`) emoji inline next to the ticket key. Don't surface Medium/Low — they're the default.
 - For 8-SP concerns: lead with ✂️ emoji, format as `✂️ [TICKET] (8 SP, status) — should be split`.
 - For the highest-attention item across the team (typically the High + blocked + no estimate one): lead with ❗ emoji.
 
-## 6. Risk deep-dive (top 5)
+## 6. Risk deep-dive  ·  top 5
 
 For each ticket classified as **at-risk** or **blocked** in [../analysis.md](../analysis.md) Step 4, give the full context needed to act on it. Lives between Concerns and Capacity breakdown.
 
@@ -346,8 +350,8 @@ Last comments:
 - Cap at 6 transitions. If more, show first 2 + *"… <N> more transitions …"* + last 2.
 
 **PR line:**
-- If linked PR(s) exist: `PR: #<number> <state>, <age> open, <last review summary>`. Example: *"PR: #4421 open, 5d open, no review activity."*
-- Multiple PRs on one ticket: list them on separate lines under `PRs:`.
+- If linked PR(s) exist: `PR: [#<number>](<pr_url>) <state>, <age> open, <last review summary>`. **The PR number is always a markdown link to the PR** — same rule as ticket keys. Example: *"PR: [#4421](https://github.com/acme/orca/pull/4421) open, 5d open, no review activity."*
+- Multiple PRs on one ticket: list them on separate lines under `PRs:`, each with its own markdown link.
 - No linked PR: *"PR: no PR linked."* — surface even when not actionable, because absence often IS the signal for In-Progress tickets.
 - Skip the PR line entirely if PR/dev-info wasn't fetched for this run (not all routine runs pay the dev-info cost).
 
@@ -375,7 +379,8 @@ Hours use literal `remaining_story_points` (rSP) — that's what's actually comm
 
 Per reportee:
 - `### <Full Name> — <Verdict> (<total_h>h / <budget>h budget)` — budget is 80 by default, scaled down for PTO/holidays per [../pto.md](../pto.md). Append a PTO suffix when applicable: `### Bob Smith — Normal (60h / 64h budget) · 🌴 2d PTO`.
-- A markdown table with columns: `Ticket | Sprint | SP | rSP | Status | Notes`
+- A markdown table with columns: `Ticket | SP | rSP | Status | Notes`
+  - **No `Sprint` column.** The per-reportee header already names the sprint(s); repeating it in every row is noise. If a reportee straddles multiple sprints, name them all in the header and let the row context speak for itself.
   - `Notes` column is **optional** — only include it if there's at least one ticket needing a per-ticket note (carry-over, ✂️ 8 SP, stuck, etc.). If no notes, drop the column.
   - **Do not include an `Hours` column.** Hours are computed under the hood (from SP/rSP via the Step 6 mapping) but managers don't need them in the table; the total is enough.
 - One-line summary after the table: `Total: <Xh> (<Y%>). <interpretation>`.
@@ -393,24 +398,26 @@ Total: <Xh> (<Y%>). <interpretation>
 
 The cutoff is judgmental — if rendering the table would push the canvas past ~200 lines, switch to the summary form for that reportee.
 
-## Surfaces in v1
+## Output surfaces
 
-**Canvas is currently the only rendered output** — both local-mode and routine-mode runs produce a canvas and post the link to `output_channel` (or DM the manager when `output_channel` is `null`).
+**Canvas is the only rendered output** — both local-mode and routine-mode runs produce a canvas and post the link to `output_channel` (or DM the manager when `output_channel` is `null`).
 
 For the canvas + channel-post combo: after creating the canvas, send a short message to `output_channel`. Lead with the title naming the manager by first name (`for Alice`), include `<@<manager.slack_id>>` to actually ping, the canvas URL, and a 1–2 sentence TL;DR.
 
-**Slack mention rendering.** Same rule as the delta — `<@USERID>` must resolve to the manager's display name, not show the raw ID. Send with `mrkdwn: true` (the default for `slack_send_message`). Include the manager's first name as text in the title alongside the mention; if the mention ever fails to resolve in a notification preview or surface that doesn't render mrkdwn, the name is still visible.
+**Slack mention rendering.** Same rule as the delta — `<@USERID>` must resolve to the manager's display name, not show the raw ID. Send with `mrkdwn: true` (the default for `slack_send_message`). The `<@…>` mention is the only name reference on the post — don't also write the manager's name as text, since the mention resolves to it.
 
 ## Example channel post accompanying a canvas
 
 ```
-🟡 *Sprint Monitor for Alice — Sprint 12 (20 May)* — full report <@U001AAAAAA1>
+🟡  *Sprint 187 — 23 May*  —  <@U001AAAAAA1>
 <canvas URL>
 
-TL;DR: 1 High blocked ([ZETA-2624](https://acme.atlassian.net/browse/ZETA-2624) — 12d, no estimate). Canvas has the full breakdown.
+TL;DR: 1 blocked :priority-high: ([ZETA-2624](https://acme.atlassian.net/browse/ZETA-2624) — 12d, no estimate). Canvas has the full breakdown.
 ```
 
 The post is one short paragraph + the link. Manager clicks through to the canvas for everything else.
+
+**Minify the title line.** Use the same shape as the canvas's own title: `<traffic-light>  *Sprint <N> — <DD Month>*  —  <@manager>`. **No "Sprint Monitor for Alice" prefix, no "full report" qualifier** — the canvas link conveys both. Don't repeat the manager's name as text alongside the mention; one `<@…>` is the only name reference on this line.
 
 **TL;DR rules:**
 - **One sentence, two max.** Surface the single most urgent item; don't summarize the sprint at large — that's what the canvas is for.
@@ -424,7 +431,7 @@ The post is one short paragraph + the link. Manager clicks through to the canvas
 
 The canonical source for "which canvas to update" is the canvas id discovered via the Slack lookup at the start of the run (see [../../SKILL.md](../../SKILL.md) "Finding the prior canvas" and "Sourcing the prior percentage" above). If the lookup found a canvas and the prior sprint context overlaps the current active set, call `slack_update_canvas` with `action=replace` (no `section_id`) on that id to rewrite the whole canvas in one shot. If the lookup found nothing, or the sprint rolled over, create a fresh canvas via `slack_create_canvas` instead.
 
-Section-level replaces via `section_id` have proven unreliable for nested-list edits (they sometimes insert rather than replace) — prefer full canvas replaces for any structural change. Single-line text tweaks via `section_id` are fine.
+Section-level replaces via `section_id` are unreliable for nested-list edits (they sometimes insert rather than replace) — prefer full canvas replaces for any structural change. Single-line text tweaks via `section_id` are fine.
 
 ## Don't bake in stale section content
 
