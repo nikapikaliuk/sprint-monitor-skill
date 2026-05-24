@@ -28,7 +28,7 @@ These mirror the [delta's per-line formatting rules](delta.md#per-line-formattin
 - **Status names** go in backticks, in human form (`` `In Review` ``, `` `Ready for Verification` ``). Normalize `IN_REVIEW` → `In Review` before rendering.
 - **Priorities are Slack emoji** where the workspace supports them — `:priority-critical:`, `:priority-high:`, `:priority-medium:`, `:priority-low:`. Position: immediately after the ticket link. Fall back to the bare priority word if the emoji isn't available. Never bracketed text like `(High)`.
 - **People names are bold.** Canvas uses **full names** (`**Dave Wilson**`); the delta uses first names. Same bold rule, different name length — chosen deliberately because the canvas is a longer browsable document and the full name removes ambiguity.
-- **Counts use a `·` separator**, not parens — `**Dave Wilson**  ·  3 removed`, `## 6. Risk deep-dive  ·  top 5`. Same pattern as the delta's `🚧  *New blockers*  ·  2` category subtitle. Two spaces around the `·`.
+- **Counts use a `·` separator**, not parens — `**Dave Wilson**  ·  3 removed`, `## Risk deep-dive  ·  top 5`. Same pattern as the delta's `🚧  *New blockers*  ·  2` category subtitle. Two spaces around the `·`.
 - **Section dividers** — between top-level `##` sections, insert a short `━━━━━━━━━━━━` (~12 chars) line, the same divider used in the delta. The `##` heading already separates, but the rule adds visual rhythm and matches the delta's section cadence.
 
 ## Title
@@ -48,17 +48,23 @@ These mirror the [delta's per-line formatting rules](delta.md#per-line-formattin
 6. **Risk deep-dive** (top 5 risk tickets)
 7. **Capacity breakdown** (detailed per-ticket tables)
 
+The numbers above are **for reference ordering only — do not put them in the rendered `##` headings**. The canvas heading is `## Sprint health snapshot`, not `## 1. Sprint health snapshot`.
+
 Keep the canvas tight — the manager skims top-to-bottom and the most signal-dense parts are first. No preamble, no trailer, no sections beyond the seven listed.
 
-## 1. Sprint health snapshot
+## Sprint health snapshot
 
-Three lines (no leading bullet marker), each starting with a category emoji + bold label + `·` separator + count, matching the delta's category-subtitle styling:
+Three records (no leading bullet marker), each starting with a category emoji + bold label + `·` separator + count, matching the delta's category-subtitle styling. **Each record is its own paragraph — separate them with a blank line so each renders as a distinct visual line in the canvas.**
 
 ```
 🚧 **Blocked**  ·  <N> tickets — <K> :priority-high: (<links>), <M> :priority-medium:, <L> :priority-low:.
+
 ❓ **Unestimated**  ·  <N> tickets — <K> in-flight `Blocked` (<links>).
+
 ✂️ **Need to be splitted**  ·  <N> tickets — <link1> (<owner>, `<status>`) and <link2> (<owner>, `<status>`, half-done).
 ```
+
+**Required output format — read this literally:** insert a blank line between each of the three records. Without blank lines, Slack canvas / CommonMark collapses consecutive lines into one paragraph, and all three categories mash together into a single run. Three records → three paragraphs → three visible lines in the rendered canvas. Never emit them as plain stacked text separated only by `\n`.
 
 Rules:
 - **Blocked line.** Always lead with High-priority blocked tickets by ticket key + link. Drop the distribution (per-reportee counts) — the Capacity overview already shows who has load issues. If 0 :priority-high: blocked, just say `**Blocked**  ·  N tickets — all Medium/Low` or similar.
@@ -67,7 +73,7 @@ Rules:
 
 If a category has 0 tickets, drop the entire line.
 
-## 1b. Removed since last canvas *(conditional)*
+## Removed since last canvas *(conditional)*
 
 Renders only when **both** conditions hold:
 
@@ -124,9 +130,23 @@ Sprint removals are a discipline signal worth seeing explicitly — they're the 
 
 Pairs with the delta's "🚮 Removed from sprint" category ([../output/delta.md](../output/delta.md) category 6b) — same signal, 24h scope instead of inter-canvas scope.
 
-## 2. Capacity overview
+## Capacity overview
 
-One paragraph line per reportee. **Sort by load: Overbooked → Borderline → Normal → Underworked.** Within each tier, sort by percentage descending.
+One paragraph per reportee. **Each reportee is its own paragraph — separate them with a blank line so each renders as a distinct visual line in the canvas.**
+
+**Sort by load: Overbooked → Borderline → Normal → Underworked.** Within each tier, sort by percentage descending.
+
+**Required output format — read this literally:** insert a blank line between every two consecutive reportee paragraphs. Without blank lines, Slack canvas / CommonMark collapses all reportees into one giant paragraph (every `🔴 X` and `🟡 Y` mashes together). Six reportees → six paragraphs → six visible lines in the rendered canvas. Never emit reportees as plain stacked text separated only by `\n`, and never chain reportees inline (`🔴 X 🔴 Y`).
+
+Shape:
+
+```
+🔴 **Dave Wilson** · ETA · Overbooked · 263%
+
+🟡 **Bob Smith** · ALPHA · Borderline · 115%
+
+🟢 **Eve Martinez** · DELTA · Normal · 94%
+```
 
 ### Two line shapes — first canvas of the sprint vs. subsequent canvases
 
@@ -222,7 +242,7 @@ If a reportee's sprint ends very soon (≤2 working days) and they're not Normal
 
 Emoji: 🌴 vacation, 🤒 sick. Comma-separate multiple entries. Only show entries with at least one day inside the sprint window. The verdict percentage is computed against the **scaled** `capacity_hours` (see [../pto.md](../pto.md) "Capacity math"). See [../pto.md](../pto.md) "Display" for full rules.
 
-## 3. Out this sprint *(conditional)*
+## Out this sprint *(conditional)*
 
 Only rendered when at least one reportee has **personal** PTO (vacation or sick) inside the current sprint window. Public holidays do NOT appear here — they have a separate info block (section 4). If no personal PTO this sprint, omit this section.
 
@@ -239,7 +259,7 @@ Order: anyone out *today* first, then upcoming dates, then past dates inside the
 
 See [../pto.md](../pto.md) "Display" for the full rules and edge cases.
 
-## 4. Group holidays this sprint *(conditional)*
+## Group holidays this sprint *(conditional)*
 
 Info block listing country holidays whose dates fall inside the current sprint window. Renders only when at least one holiday from the group's `country` or any `info_countries` is in range; otherwise omit the section entirely.
 
@@ -260,7 +280,7 @@ Rules:
 - `info_countries` holidays do **not** affect capacity for anyone in this group — they're for cross-team awareness (e.g. the Polish team knowing Israeli colleagues are off).
 - Skip a country's line if it has no holidays in the sprint window. Skip the whole section if all countries are empty.
 
-## 5. Concerns
+## Concerns
 
 Per-reportee list of qualifying concerns. Format is a nested bulleted list:
 
@@ -308,7 +328,7 @@ Sort concerns by urgency:
 - For 8-SP concerns: lead with ✂️ emoji, format as `✂️ [TICKET] (8 SP, status) — should be split`.
 - For the highest-attention item across the team (typically the High + blocked + no estimate one): lead with ❗ emoji.
 
-## 6. Risk deep-dive  ·  top 5
+## Risk deep-dive  ·  Top 5
 
 For each ticket classified as **at-risk** or **blocked** in [../analysis.md](../analysis.md) Step 4, give the full context needed to act on it. Lives between Concerns and Capacity breakdown.
 
@@ -366,7 +386,7 @@ Last comments:
 - Phrase actively: *"Bob needs a 30-min pairing with someone on the auth team."* not *"Could be worth pairing."*
 - If the signals don't suggest a clear action, write: *"Watch for changes; nothing obvious to do yet."*
 
-## 7. Capacity breakdown — at the bottom of the canvas
+## Capacity breakdown — at the bottom of the canvas
 
 The detailed per-ticket math. Lives at the **end** of the canvas because most managers won't drill into it during a standup-style read; the snapshot + capacity overview already give them the verdict.
 
