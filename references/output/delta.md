@@ -122,7 +122,9 @@ Surface tickets that **just crossed** a threshold the canvas would also flag —
   - **Owner grouping** uses the same per-reportee shape as every other category (see Per-line formatting rules above). Within each person, sort tickets descending by priority then descending by SP.
   - **One ticket per line.** Never comma-group multiple keys on a line.
 
-The Due-now sub-block follows the same per-reportee layered shape as the rest of the delta. The **Sprint-ends** sub-block uses a **per-sprint** header (sprint name + end date + count), then the same per-reportee body shape — including when only one reportee has items.
+The Due-now sub-block follows the same per-reportee layered shape as the rest of the delta. The **Sprint-ends** sub-block uses a **single header** (just the count of not-done tickets across all closing sprints), then the same per-reportee body shape — including when only one reportee has items.
+
+**Do NOT include sprint name or end date** in the Sprint-ends header — not on the global header, not on per-reportee sub-headers. Drop both. Sprint name + end date already appear on the title line and on the canvas; repeating them in this sub-block (especially per-reportee, which produces lines like `Pavel · CNC Sprint 185 · ends Mon May 25 · 3 not done`) is duplicated noise. The per-reportee sub-header is just the bold first name — no sprint, no date, no count suffix (the nested ticket list conveys the count visually).
 
 ```
 ⚠️  *Due now ≤2d*  ·  1
@@ -131,27 +133,27 @@ The Due-now sub-block follows the same per-reportee layered shape as the rest of
 
 ━━━━━━━━━━━━
 
-⚠️  *ZETA Sprint 185 ends Sun May 24*  ·  14 not done
+⚠️  *Sprint ending soon*  ·  14 not done
 
    *Olga*
-        1. [ZETA-3707](https://acme.atlassian.net/browse/ZETA-3707) :priority-medium: — `Development Ready` (4 SP)
-        2. [ZETA-3625](https://acme.atlassian.net/browse/ZETA-3625) :priority-medium: — `Development Ready` (4 SP)
-        3. [ZETA-3554](https://acme.atlassian.net/browse/ZETA-3554) :priority-medium: — `In Progress` (4 SP)
-        4. [ZETA-3317](https://acme.atlassian.net/browse/ZETA-3317) :priority-medium: — `Merged` (4 SP)
-        5. [ZETA-3546](https://acme.atlassian.net/browse/ZETA-3546) :priority-medium: — `In Review` (2 SP)
-        6. [ZETA-3547](https://acme.atlassian.net/browse/ZETA-3547) :priority-medium: — `Backlog` (2 SP)
+        [ZETA-3707](https://acme.atlassian.net/browse/ZETA-3707) :priority-medium: — `Development Ready` (4 SP)
+        [ZETA-3625](https://acme.atlassian.net/browse/ZETA-3625) :priority-medium: — `Development Ready` (4 SP)
+        [ZETA-3554](https://acme.atlassian.net/browse/ZETA-3554) :priority-medium: — `In Progress` (4 SP)
+        [ZETA-3317](https://acme.atlassian.net/browse/ZETA-3317) :priority-medium: — `Merged` (4 SP)
+        [ZETA-3546](https://acme.atlassian.net/browse/ZETA-3546) :priority-medium: — `In Review` (2 SP)
+        [ZETA-3547](https://acme.atlassian.net/browse/ZETA-3547) :priority-medium: — `Backlog` (2 SP)
 
    *Illia*
-        1. [ZETA-3557](https://acme.atlassian.net/browse/ZETA-3557) :priority-medium: — `Merged` (8 SP)
-        2. [ZETA-3556](https://acme.atlassian.net/browse/ZETA-3556) :priority-medium: — `In Review` (8 SP)
-        3. [ZETA-3772](https://acme.atlassian.net/browse/ZETA-3772) :priority-medium: — `To Do` (4 SP)
-        4. [ZETA-3577](https://acme.atlassian.net/browse/ZETA-3577) :priority-medium: — `Merged` (2 SP)
-        5. [ZETA-3771](https://acme.atlassian.net/browse/ZETA-3771) :priority-medium: — `Merged` (1 SP)
+        [ZETA-3557](https://acme.atlassian.net/browse/ZETA-3557) :priority-medium: — `Merged` (8 SP)
+        [ZETA-3556](https://acme.atlassian.net/browse/ZETA-3556) :priority-medium: — `In Review` (8 SP)
+        [ZETA-3772](https://acme.atlassian.net/browse/ZETA-3772) :priority-medium: — `To Do` (4 SP)
+        [ZETA-3577](https://acme.atlassian.net/browse/ZETA-3577) :priority-medium: — `Merged` (2 SP)
+        [ZETA-3771](https://acme.atlassian.net/browse/ZETA-3771) :priority-medium: — `Merged` (1 SP)
 
    *Eugene*
-        1. [ZETA-3696](https://acme.atlassian.net/browse/ZETA-3696) :priority-medium: — `Development Ready` (8 SP)
-        2. [ZETA-3700](https://acme.atlassian.net/browse/ZETA-3700) :priority-medium: — `Backlog` (4 SP)
-        3. [ZETA-3695](https://acme.atlassian.net/browse/ZETA-3695) :priority-medium: — `In Progress` (4 SP)
+        [ZETA-3696](https://acme.atlassian.net/browse/ZETA-3696) :priority-medium: — `Development Ready` (8 SP)
+        [ZETA-3700](https://acme.atlassian.net/browse/ZETA-3700) :priority-medium: — `Backlog` (4 SP)
+        [ZETA-3695](https://acme.atlassian.net/browse/ZETA-3695) :priority-medium: — `In Progress` (4 SP)
 ```
 
 ### 4. 🆕 Late sprint additions
